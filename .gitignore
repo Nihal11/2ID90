@@ -1,0 +1,34 @@
+# NetBeans.gitignore 
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+
+# Java.gitignore
+*.class
+
+
+# Tex.gitignore
+## Core latex/pdflatex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.synctex
+
+# R stuff
+.Rhistory
+*.bbl
+*.blg
+*.synctex.gz
+
+*.swp
+*.tmp
+*~
+~*
