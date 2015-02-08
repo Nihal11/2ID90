@@ -1,4 +1,4 @@
-package nl.tue.s2id90.groupNN;
+package nl.tue.s2id90.group11;
 
 
 import nl.tue.s2id90.draughts.DraughtsState;
