@@ -33,7 +33,6 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
                 state.doMove(move);
                 int score = alphaBeta(new GameNode(state), maxDepth - 1,
                         Integer.MIN_VALUE, Integer.MAX_VALUE);
-                System.out.println(score);
                 if (score > maxScore) {
                     maxScore = score;
                     bestMove = move;
@@ -46,7 +45,6 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
                 state.doMove(move);
                 int score = alphaBeta(new GameNode(state), maxDepth - 1,
                         Integer.MIN_VALUE, Integer.MAX_VALUE);
-                System.out.println(score);
                 if (score < minScore) {
                     minScore = score;
                     bestMove = move;
