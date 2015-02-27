@@ -89,24 +89,26 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
     }
     
     int evaluate(DraughtsState ds) {
+        int pieceScore = 0;
         int[] pieces = ds.getPieces();
-        int score = 0;
         for (int piece : pieces) {
             switch (piece) {
                 case DraughtsState.WHITEKING:
-                    score += 5;
+                    pieceScore += 3;
                     break;
                 case DraughtsState.WHITEPIECE:
-                    score += 1;
+                    pieceScore += 1;
                     break;
                 case DraughtsState.BLACKKING:
-                    score -= 5;
+                    pieceScore -= 3;
                     break;
                 case DraughtsState.BLACKPIECE:
-                    score -= 1;
+                    pieceScore -= 1;
                     break;
             }
         }
-        return score;
+        
+        int totalScore = pieceScore;
+        return totalScore;
     }
 }
