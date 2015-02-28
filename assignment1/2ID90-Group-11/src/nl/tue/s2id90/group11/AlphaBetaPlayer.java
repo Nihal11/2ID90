@@ -11,12 +11,24 @@ import org10x10.dam.game.Move;
  * @author dennis
  */
 public class AlphaBetaPlayer extends DraughtsPlayer {
-    private final static int maxDepth = 8;
+    private boolean shouldStop;
     
     @Override
     /** @return a random move **/
     public Move getMove(DraughtsState s) {
-        return getBestMove(s);
+        Move bestMove = s.getMoves().get(0);
+        try {
+            shouldStop = false;
+            int maxDepth = 1;
+            while (true) {
+                bestMove = getBestMove(s, maxDepth);
+                System.out.println("Depth: " + maxDepth);
+                maxDepth++;
+            }
+        } catch (AIStoppedException ex) {
+            
+        }
+        return bestMove;
     }
 
     @Override
@@ -24,7 +36,7 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         return 0;
     }
     
-    Move getBestMove(GameState state) {
+    Move getBestMove(GameState state, int maxDepth) throws AIStoppedException {
         Move bestMove = null;
         List<Move> moves = state.getMoves();
         if (state.isWhiteToMove()) {
@@ -55,12 +67,20 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         return bestMove;
     }
     
+    @Override
+    public void stop() {
+        shouldStop = true;
+    }
+    
     // TODO: Add stop() method as described in assignment1.pdf->section 2
     // White maximizes score, black minimizes
-    int alphaBeta(GameNode node, int remainingDepth, int alpha, int beta) {
+    int alphaBeta(GameNode node, int remainingDepth, int alpha, int beta) throws AIStoppedException {
         GameState state = node.getGameState();
         if (remainingDepth == 0 || state.isEndState()) {
             return evaluate((DraughtsState) state);
+        }
+        if (shouldStop) {
+            throw new AIStoppedException();
         }
         List<Move> moves = state.getMoves();
         if (state.isWhiteToMove()) { // Maximizing player
@@ -108,5 +128,11 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         
         int totalScore = pieceScore;
         return totalScore;
+    }
+
+    private static class AIStoppedException extends Exception {
+
+        public AIStoppedException() {
+        }
     }
 }
