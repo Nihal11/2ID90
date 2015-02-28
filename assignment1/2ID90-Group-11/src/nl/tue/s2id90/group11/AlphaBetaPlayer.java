@@ -107,22 +107,36 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
     }
     
     int evaluate(DraughtsState ds) {
-        int pieceScore = 0;
+        // Calculate score of all pieces that are on the board
+        int whitePieceScore = 0;
+        int blackPieceScore = 0;
         int[] pieces = ds.getPieces();
         for (int piece : pieces) {
             switch (piece) {
                 case DraughtsState.WHITEKING:
-                    pieceScore += 3;
+                    whitePieceScore += 3;
                     break;
                 case DraughtsState.WHITEPIECE:
-                    pieceScore += 1;
+                    whitePieceScore += 1;
                     break;
                 case DraughtsState.BLACKKING:
-                    pieceScore -= 3;
+                    blackPieceScore -= 3;
                     break;
                 case DraughtsState.BLACKPIECE:
-                    pieceScore -= 1;
+                    blackPieceScore -= 1;
                     break;
+            }
+        }
+        int pieceScore = whitePieceScore + blackPieceScore;
+        
+        // Check if someone won or if there is a draw
+        if (ds.isEndState()) {
+            if (whitePieceScore == 0) { // Black win
+                return Integer.MIN_VALUE;
+            } else if (blackPieceScore == 0) { // White win
+                return Integer.MAX_VALUE;
+            } else { // Draw
+                return 0;
             }
         }
         
