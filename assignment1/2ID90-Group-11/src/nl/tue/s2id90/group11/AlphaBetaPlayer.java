@@ -12,6 +12,7 @@ import org10x10.dam.game.Move;
  */
 public class AlphaBetaPlayer extends DraughtsPlayer {
     private boolean shouldStop;
+    private int lastBestScore = 0;
     
     @Override
     /** @return a random move **/
@@ -33,12 +34,13 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
 
     @Override
     public Integer getValue() {
-        return 0;
+        return lastBestScore;
     }
     
     Move getBestMove(GameState state, int maxDepth) throws AIStoppedException {
         Move bestMove = null;
         List<Move> moves = state.getMoves();
+        int bestScore = 0;
         if (state.isWhiteToMove()) {
             int maxScore = Integer.MIN_VALUE;
             for (Move move : moves) {
@@ -48,6 +50,7 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
                 if (score > maxScore) {
                     maxScore = score;
                     bestMove = move;
+                    bestScore = maxScore;
                 }
                 state.undoMove(move);
             }
@@ -60,10 +63,12 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
                 if (score < minScore) {
                     minScore = score;
                     bestMove = move;
+                    bestScore = minScore;
                 }
                 state.undoMove(move);
             }
         }
+        lastBestScore = bestScore;
         return bestMove;
     }
     
