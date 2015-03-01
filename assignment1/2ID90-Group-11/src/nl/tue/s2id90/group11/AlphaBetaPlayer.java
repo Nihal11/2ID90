@@ -20,7 +20,7 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         try {
             shouldStop = false;
             int maxDepth = 1;
-            while (true) {
+            while (maxDepth < 200) {
                 bestMove = getBestMove(s, maxDepth);
                 System.out.println("Depth: " + maxDepth);
                 maxDepth++;
@@ -132,9 +132,9 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         // Check if someone won or if there is a draw
         if (ds.isEndState()) {
             if (whitePieceScore == 0) { // Black win
-                return Integer.MIN_VALUE;
+                return Integer.MIN_VALUE + 1;
             } else if (blackPieceScore == 0) { // White win
-                return Integer.MAX_VALUE;
+                return Integer.MAX_VALUE - 1;
             } else { // Draw
                 return 0;
             }
