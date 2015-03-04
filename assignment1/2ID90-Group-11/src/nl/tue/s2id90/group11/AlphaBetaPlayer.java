@@ -12,7 +12,7 @@ import org10x10.dam.game.Move;
  */
 public class AlphaBetaPlayer extends DraughtsPlayer {
     private boolean shouldStop;
-    private int lastBestScore = 0;
+    private int lastScore = 0;
     
     @Override
     /** @return a random move **/
@@ -34,7 +34,7 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
 
     @Override
     public Integer getValue() {
-        return lastBestScore;
+        return lastScore;
     }
     
     Move getBestMove(GameState state, int maxDepth) throws AIStoppedException {
@@ -42,6 +42,7 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         List<Move> moves = state.getMoves();
         int bestScore = 0;
         if (state.isWhiteToMove()) {
+            // Find best move for white player (highest alpha-beta score)
             int maxScore = Integer.MIN_VALUE;
             for (Move move : moves) {
                 state.doMove(move);
@@ -55,6 +56,7 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
                 state.undoMove(move);
             }
         } else {
+            // Find best move for black player (lowest alpha-beta score)
             int minScore = Integer.MAX_VALUE;
             for (Move move : moves) {
                 state.doMove(move);
@@ -68,7 +70,7 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
                 state.undoMove(move);
             }
         }
-        lastBestScore = bestScore;
+        lastScore = bestScore; // Store best score for use in getValue()
         return bestMove;
     }
     
