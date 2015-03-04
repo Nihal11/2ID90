@@ -77,7 +77,6 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         shouldStop = true;
     }
     
-    // TODO: Add stop() method as described in assignment1.pdf->section 2
     // White maximizes score, black minimizes
     int alphaBeta(GameNode node, int remainingDepth, int alpha, int beta) throws AIStoppedException {
         GameState state = node.getGameState();
