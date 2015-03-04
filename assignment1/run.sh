@@ -5,6 +5,11 @@
 # ./run.sh        # to build and run the application.
 
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk/
+if [ ! -d "$JAVA_HOME" ] ; then
+    # Specific hack for Dennis' setup.
+    export JAVA_HOME=/home/dennis/jdk1.8.0_40/
+fi
+
 cd "$(dirname "$(realpath "$0")" )"
 
 if [ "$1" == "clean" ] ; then
