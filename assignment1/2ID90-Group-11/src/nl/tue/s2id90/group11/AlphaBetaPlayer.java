@@ -18,15 +18,17 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
     /** @return a random move **/
     public Move getMove(DraughtsState state) {
         Move bestMove = state.getMoves().get(0);
+        int reachedDepth = 0;
         try {
             int maxDepth = 1;
             List<Move> moves = state.getMoves();
             while (maxDepth < 200) {
                 bestMove = getBestMove(state, maxDepth, moves);
-                System.out.println("Depth: " + maxDepth);
+                reachedDepth = maxDepth;
                 maxDepth++;
             }
         } catch (AIStoppedException ex) {
+            System.out.println("Reached depth: " + reachedDepth);
             
         }
         return bestMove;
@@ -72,7 +74,6 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         lastScore = bestScore; // Store best score for use in getValue()
         // Move bestMove to the first position so it gets evaluated first on the next iteration
         if (moves.get(0) != bestMove) {
-            System.out.println(moves.get(0) + " --> " + bestMove);
             moves.remove(bestMove);
             moves.add(0, bestMove);
         }
@@ -118,7 +119,6 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         }
     }
 
-    // 
     final static private int SCORE_WHITE_WIN = Integer.MAX_VALUE - 1;
     final static private int SCORE_BLACK_WIN = Integer.MIN_VALUE + 1;
     
