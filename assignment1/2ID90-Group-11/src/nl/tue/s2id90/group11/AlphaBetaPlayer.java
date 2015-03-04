@@ -154,8 +154,20 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         }
         int pieceScore = whitePieceScore - blackPieceScore;
         
-        
-        int totalScore = pieceScore;
+        int positionScore = 0;
+        for (int i = 0; i < 50; ++i) {
+            int piece = ds.getPiece(i + 1); // 1-indexed
+            int row = i / 5;
+            switch (piece) {
+                case DraughtsState.WHITEPIECE:
+                    positionScore += row;
+                    break;
+                case DraughtsState.BLACKPIECE:
+                    positionScore -= 10 - 1 - row;
+                    break;
+            }
+        }
+        int totalScore = 1000 * pieceScore + positionScore;
         return totalScore;
     }
 
