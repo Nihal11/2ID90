@@ -16,12 +16,13 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
     
     @Override
     /** @return a random move **/
-    public Move getMove(DraughtsState s) {
-        Move bestMove = s.getMoves().get(0);
+    public Move getMove(DraughtsState state) {
+        Move bestMove = state.getMoves().get(0);
         try {
             int maxDepth = 1;
+            List<Move> moves = state.getMoves();
             while (maxDepth < 200) {
-                bestMove = getBestMove(s, maxDepth);
+                bestMove = getBestMove(state, maxDepth, moves);
                 System.out.println("Depth: " + maxDepth);
                 maxDepth++;
             }
@@ -36,9 +37,8 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         return lastScore;
     }
     
-    Move getBestMove(GameState state, int maxDepth) throws AIStoppedException {
+    Move getBestMove(GameState state, int maxDepth, List<Move> moves) throws AIStoppedException {
         Move bestMove = null;
-        List<Move> moves = state.getMoves();
         int bestScore = 0;
         if (state.isWhiteToMove()) {
             // Find best move for white player (highest alpha-beta score)
@@ -111,8 +111,21 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
             return beta;
         }
     }
+
+    // 
+    final static private int SCORE_WHITE_WIN = Integer.MAX_VALUE - 1;
+    final static private int SCORE_BLACK_WIN = Integer.MIN_VALUE + 1;
     
     int evaluate(DraughtsState ds) {
+        // Check if someone won
+        if (ds.isEndState()) {
+            if (ds.isWhiteToMove()) {
+                return SCORE_BLACK_WIN;
+            } else {
+                return SCORE_WHITE_WIN;
+            }
+        }
+
         // Calculate score of all pieces that are on the board
         int whitePieceScore = 0;
         int blackPieceScore = 0;
@@ -135,18 +148,6 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         }
         int pieceScore = whitePieceScore - blackPieceScore;
         
-        // Check if someone won or if there is a draw
-        if (ds.isEndState()) {
-            if (whitePieceScore == 0) { // Black win
-                return Integer.MIN_VALUE + 1;
-            } else if (blackPieceScore == 0) { // White win
-                return Integer.MAX_VALUE - 1;
-            } else {
-                return ds.isWhiteToMove() ?
-                        Integer.MIN_VALUE + 1 :
-                        Integer.MAX_VALUE - 1;
-            }
-        }
         
         int totalScore = pieceScore;
         return totalScore;
