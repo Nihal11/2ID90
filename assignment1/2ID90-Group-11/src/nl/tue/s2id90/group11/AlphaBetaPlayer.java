@@ -11,7 +11,7 @@ import org10x10.dam.game.Move;
  * @author dennis
  */
 public class AlphaBetaPlayer extends DraughtsPlayer {
-    private boolean shouldStop;
+    private boolean shouldStop = false;
     private int lastScore = 0;
     
     @Override
@@ -19,7 +19,6 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
     public Move getMove(DraughtsState s) {
         Move bestMove = s.getMoves().get(0);
         try {
-            shouldStop = false;
             int maxDepth = 1;
             while (maxDepth < 200) {
                 bestMove = getBestMove(s, maxDepth);
@@ -86,6 +85,7 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
             return evaluate((DraughtsState) state);
         }
         if (shouldStop) {
+            shouldStop = false;
             throw new AIStoppedException();
         }
         List<Move> moves = state.getMoves();
