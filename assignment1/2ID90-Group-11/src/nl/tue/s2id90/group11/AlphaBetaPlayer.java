@@ -70,6 +70,12 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
             }
         }
         lastScore = bestScore; // Store best score for use in getValue()
+        // Move bestMove to the first position so it gets evaluated first on the next iteration
+        if (moves.get(0) != bestMove) {
+            System.out.println(moves.get(0) + " --> " + bestMove);
+            moves.remove(bestMove);
+            moves.add(0, bestMove);
+        }
         return bestMove;
     }
     
