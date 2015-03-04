@@ -12,10 +12,10 @@ import org10x10.dam.game.Move;
  * and values all moves with value 0.
  * @author huub
  */
-public class UninformedPlayer extends DraughtsPlayer {
+public class RandomPlayer extends DraughtsPlayer {
 
-    public UninformedPlayer() {
-        super(UninformedPlayer.class.getResource("resources/smiley.png"));
+    public RandomPlayer() {
+        super(RandomPlayer.class.getResource("resources/smiley.png"));
     }
     @Override
     /** @return a random move **/
