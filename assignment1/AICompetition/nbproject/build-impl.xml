@@ -1061,6 +1061,13 @@ is divided into following sections:
             </customize>
         </j2seproject1:java>
     </target>
+    <target depends="init,compile" description="Run the main class using the players from ../2ID90-Group-11." name="runn">
+        <j2seproject1:java>
+            <customize>
+              <arg line="../2ID90-Group-11/dist dist"/>
+            </customize>
+        </j2seproject1:java>
+    </target>
     <target name="-do-not-recompile">
         <property name="javac.includes.binary" value=""/>
     </target>
