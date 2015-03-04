@@ -126,14 +126,14 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
                     whitePieceScore += 1;
                     break;
                 case DraughtsState.BLACKKING:
-                    blackPieceScore -= 3;
+                    blackPieceScore += 3;
                     break;
                 case DraughtsState.BLACKPIECE:
-                    blackPieceScore -= 1;
+                    blackPieceScore += 1;
                     break;
             }
         }
-        int pieceScore = whitePieceScore + blackPieceScore;
+        int pieceScore = whitePieceScore - blackPieceScore;
         
         // Check if someone won or if there is a draw
         if (ds.isEndState()) {
@@ -141,8 +141,10 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
                 return Integer.MIN_VALUE + 1;
             } else if (blackPieceScore == 0) { // White win
                 return Integer.MAX_VALUE - 1;
-            } else { // Draw
-                return 0;
+            } else {
+                return ds.isWhiteToMove() ?
+                        Integer.MIN_VALUE + 1 :
+                        Integer.MAX_VALUE - 1;
             }
         }
         
