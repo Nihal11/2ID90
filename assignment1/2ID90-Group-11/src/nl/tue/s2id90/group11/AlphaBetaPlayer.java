@@ -136,22 +136,37 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         int whitePieceScore = 0;
         int blackPieceScore = 0;
         int[] pieces = ds.getPieces();
-        for (int piece : pieces) {
+        for (int i = 0; i < pieces.length; ++i) {
+            int piece = pieces[i];
+            // The 10x10 board has 10 rows, and 5 possible pieces per row.
+            // Pieces that are close to the other end are preferable,
+            // because they are more likely to become a king.
+            // "The other end" = row 0 for white,
+            // "The other end" = row 9 for black.
+            int row = (int)Math.floor(i / 5);
+
             switch (piece) {
                 case DraughtsState.WHITEKING:
-                    whitePieceScore += 3;
+                    whitePieceScore += 3000;
+                    // Getting a king home is preferred over keeping a king at the end.
+                    whitePieceScore += row;
                     break;
                 case DraughtsState.WHITEPIECE:
-                    whitePieceScore += 1;
+                    whitePieceScore += 1000;
+                    whitePieceScore += 9 - row;
                     break;
                 case DraughtsState.BLACKKING:
-                    blackPieceScore += 3;
+                    blackPieceScore += 3000;
+                    // Getting a king home is preferred over keeping a king at the end.
+                    whitePieceScore += 9 - row;
                     break;
                 case DraughtsState.BLACKPIECE:
-                    blackPieceScore += 1;
+                    blackPieceScore += 1000;
+                    blackPieceScore += row;
                     break;
             }
         }
+
         int pieceScore = whitePieceScore - blackPieceScore;
         
         
