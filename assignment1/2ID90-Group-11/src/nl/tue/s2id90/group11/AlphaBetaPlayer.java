@@ -13,6 +13,20 @@ import org10x10.dam.game.Move;
 public class AlphaBetaPlayer extends DraughtsPlayer {
     private boolean shouldStop = false;
     private int lastScore = 0;
+
+    // Bonus for piece position; index 0 = home, index 9 = other side.
+    private final static int[] ROW_BONUS = {
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+    };
     
     @Override
     /** @return a random move **/
@@ -153,7 +167,7 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
                     break;
                 case DraughtsState.WHITEPIECE:
                     whitePieceScore += 1000;
-                    whitePieceScore += 9 - row;
+                    whitePieceScore += ROW_BONUS[row];
                     break;
                 case DraughtsState.BLACKKING:
                     blackPieceScore += 3000;
@@ -162,7 +176,7 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
                     break;
                 case DraughtsState.BLACKPIECE:
                     blackPieceScore += 1000;
-                    blackPieceScore += row;
+                    blackPieceScore += ROW_BONUS[9 - row];
                     break;
             }
         }
