@@ -143,7 +143,7 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
             // because they are more likely to become a king.
             // "The other end" = row 0 for white,
             // "The other end" = row 9 for black.
-            int row = (int)Math.floor(i / 5);
+            int row = (int)Math.floor((i - 1) / 5);
 
             switch (piece) {
                 case DraughtsState.WHITEKING:
