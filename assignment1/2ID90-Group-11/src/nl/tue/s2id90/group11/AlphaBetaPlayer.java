@@ -16,16 +16,22 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
 
     // Bonus for piece position; index 0 = home, index 9 = other side.
     private final static int[] ROW_BONUS = {
-        0,
+        // Staying home is preferable to moving one forward, in order to defend
+        // against incoming pieces from the opponent.
+        1,
+        // Otherwise, use Fibonacci to prefer moving forward over moving one by one.
         1,
         2,
         3,
-        4,
         5,
-        6,
-        7,
         8,
-        9
+        13,
+        21,
+        34,
+        // Note: The game engine should automatically convert this piece to a king,
+        // so a piece at position 9 is not possible. Nevertheless, define a value
+        // in case the engine has a bug.
+        3000
     };
     
     @Override
