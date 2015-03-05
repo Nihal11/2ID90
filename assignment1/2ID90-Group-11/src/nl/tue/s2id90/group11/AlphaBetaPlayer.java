@@ -157,13 +157,16 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         int positionScore = 0;
         for (int i = 0; i < 50; ++i) {
             int piece = ds.getPiece(i + 1); // 1-indexed
-            int row = i / 5;
+            int row = i / 5; // row 0 is the backline of white
+            int scoreForRow[] = {10, 1, 1, 2, 3, 5, 8, 13, 21, 34};
+            int rowW = row;
+            int rowB = 10 - 1 - row;
             switch (piece) {
                 case DraughtsState.WHITEPIECE:
-                    positionScore += row;
+                    positionScore += scoreForRow[rowW];
                     break;
                 case DraughtsState.BLACKPIECE:
-                    positionScore -= 10 - 1 - row;
+                    positionScore -= scoreForRow[rowB];
                     break;
             }
         }
