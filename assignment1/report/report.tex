@@ -5,6 +5,7 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\usepackage[]{algorithm2e}
 
 % New paragraph = blank line, not indent.
 \setlength{\parskip}{0.3cm}
@@ -26,10 +27,36 @@ Rob Wu (0787817)
 \newpage
 \section{The algorithm}
 
+\begin{function}[H]
+	\caption{alphabeta(node, depth, $\alpha$, $\beta$)}
+		\If{depth = 0 or node is a terminal node}{
+    	    return the heuristic value of node
+    	}
+    	\eIf{node.player = white}{
+    		\For{each child of node}{
+    			$\alpha$ =  max($\alpha$, alphabeta(child, depth - 1, $\alpha$, $\beta$))\\
+            	\If{$beta \leq alpha$}{
+					break \tcc*{Beta cut-off}
+            	}
+			}
+        	\Return{$\alpha$}
+    	}{ % else
+    		\For{each child of node}{
+    			$\beta$ = min($\beta$, alphabeta(child, depth - 1, $\alpha$, $\beta$))\\
+				\If{$\alpha \leq \beta$}{
+					break \tcc*{Alpha cut-off}
+				}
+			}
+			\Return{$\beta$}
+		}
+\end{function}
+
 \section{Results + evaluation}
 
 
 \section{References}
+http://www.cs.columbia.edu/~devans/TIC/AB.html\\
+% http://stackoverflow.com/q/12990912/1928529 of http://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning#Pseudocode (Voor alphabeta pseudocode)
 \section{Contributions}
 \section{Reproducing the results}
 
