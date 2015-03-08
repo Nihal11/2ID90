@@ -8,7 +8,8 @@ import org10x10.dam.game.Move;
 
 /**
  * An alpha-beta player
- * @author dennis
+ * @author Rob
+ * @author Dennis
  */
 public class AlphaBetaPlayer extends DraughtsPlayer {
     private boolean shouldStop = false;
@@ -18,7 +19,7 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
     private final static int[] ROW_BONUS = {
         // Staying home is preferable to moving one forward, in order to defend
         // against incoming pieces from the opponent.
-        1,
+        10,
         // Otherwise, use Fibonacci to prefer moving forward over moving one by one.
         1,
         2,
@@ -173,16 +174,16 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
                     break;
                 case DraughtsState.WHITEPIECE:
                     whitePieceScore += 1000;
-                    whitePieceScore += ROW_BONUS[row];
+                    whitePieceScore += ROW_BONUS[9 - row];
                     break;
                 case DraughtsState.BLACKKING:
                     blackPieceScore += 3000;
                     // Getting a king home is preferred over keeping a king at the end.
-                    whitePieceScore += 9 - row;
+                    blackPieceScore += 9 - row;
                     break;
                 case DraughtsState.BLACKPIECE:
                     blackPieceScore += 1000;
-                    blackPieceScore += ROW_BONUS[9 - row];
+                    blackPieceScore += ROW_BONUS[row];
                     break;
             }
         }
