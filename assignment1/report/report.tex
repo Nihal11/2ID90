@@ -65,11 +65,11 @@ Rob Wu (0787817)
 \section{Evaluation function}
 We intentionally kept our evaluation function simple and fast. Keeping it simple makes it easier to understand what is going on and thus easier to improve the magic numbers. Because of the simple evaluation function we also had an easier time fixing a bug we had in our alpha-beta algorithm. Keeping the function fast allows us to look forward as many turns as possible in the given time. Our evaluation function is build as a combination of three score modifiers.
 
-The first and most important score modifier is activated when the currently evaluated node is a final game state in which someone won. If white won we return as score the maximum representable integer value. On the other hand, if black won, we return the minimum representable integer value. If someone won the other modifiers are not incorporated in the score as we value every win the same.
+The first and most important score modifier is activated when the currently evaluated node is a final game state in which someone won. If white won we return the maximum representable integer value as state value. On the other hand, if black won, we return the minimum representable value. If someone won, the other modifiers are not incorporated in the score as we value every winning state the same.
 
-The second score modifier is used to value the pieces that are on the board.
+The second score modifier is used to value the pieces that are on the board. For this part we only look at the kind of piece, white or black, uncrowned or king. We give a value of $1000$ to a white uncrowned piece. On advice of dr.ir. J.W. Wesselink we decided to value kings thrice as high as an uncrowned piece, so a white king is worth $3000$. This makes sure our player will work toward getting a king without giving up too many uncrowned pieces for that goal. The values of the black pieces are the opposite of the values of the white pieces, as we want to have a symmetric evaluation function.
 
-The third, and least influential, score modifier gives a value to all pieces depending on how far they are from the back row.
+The third score modifier gives a value to all pieces depending on the row they are positioned on. Every piece gets a score which gets higher the closer it gets to the other side of the board. The score difference between the rows is also higher when getting closer to the opposite side. In this way moving pieces forward is favoured, even before we are looking ahead far enough to see possibilities to get a king. The overall positional score is kept low as we believe an advantage in material is more important.
 
 \section{Results + evaluation}
 % Mogelijke vragen die we hier kunnen beantwoorden
