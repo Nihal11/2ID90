@@ -62,8 +62,21 @@ Rob Wu (0787817)
 	}
 \end{function}
 
-\section{Results + evaluation}
+\section{Evaluation function}
+We intentionally kept our evaluation function simple and fast. Keeping it simple makes it easier to understand what is going on and thus easier to improve the magic numbers. Because of the simple evaluation function we also had an easier time fixing a bug we had in our alpha-beta algorithm. Keeping the function fast allows us to look forward as many turns as possible in the given time. Our evaluation function is build as a combination of three score modifiers.
 
+The first and most important score modifier is activated when the currently evaluated node is a final game state in which someone won. If white won we return as score the maximum representable integer value. On the other hand, if black won, we return the minimum representable integer value. If someone won the other modifiers are not incorporated in the score as we value every win the same.
+
+The second score modifier is used to value the pieces that are on the board.
+
+The third, and least influential, score modifier gives a value to all pieces depending on how far they are from the back row.
+
+\section{Results + evaluation}
+% Mogelijke vragen die we hier kunnen beantwoorden
+What is our player good at?\\
+What could we have improved?\\
+What kind of players do we win from?\\
+To what extend does the search horizon play a role? % Kan misschien naar section `algorithm` verplaatst worden
 
 \section{References}
 \url{http://www.cs.columbia.edu/~devans/TIC/AB.html}
