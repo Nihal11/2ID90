@@ -97,15 +97,16 @@ row & score & comment \\
 7 & 13 & \\
 8 & 21 & \\
 9 & 31 & \\
-10 & 0 & A piece at the end is already a king. There's no need to associate a score with a piece at the last row, because this case does not occur. \\
+10 & 3000 & A piece at the end is already a king. There's no need to associate a score with a piece at the last row, because this case does not occur. We fill in the table with score 3000 to show that this piece is a king. \\
 \end{tabularx}
 \caption{Bonus scores for piece position.}\label{table:bonusscore}
 \end{table}
 
 \section{Results}
-Our player did fairly well in the tournament, especially given the fact that our evaluation function contained an error. As a result of this error the white player focussed more on keeping his pieces on the back line than on getting a material advantage. Because of that we lost one match of the group phase and consequently we did not qualify for the quarter finals. After finding and fixing the error we reran all the matches, playing on the white side, as well as the black side. This time we won all those matches. Then we continued testing by playing against the winner of the tournament (player 42/Poro\_Plank). We lose consistently when playing on the black side but when playing as white most of our games result in a win [\ref{fig:win42}] or a draw [\ref{fig:draw42}].
+Our player did fairly well in the tournament, especially considering the fact that the implementation of our evaluation function contained an error: We accidentally flipped the table of the bonus scores (table \ref{table:bonusscore}). Consequently, the intended effect of the position score was not applied (worse: the pieces at the first row were very sticky due to the incorrect bonus score of 3000).
+Because of that we lost one match of the group phase and consequently we did not qualify for the quarter finals. After finding and fixing the error we replayed all the matches, playing on the white side, as well as the black side. This time we won all those matches. Then we continued testing by playing against the winner of the tournament (player 42/Poro\_Plank). We lose consistently when playing on the black side but when playing as white most of our games result in a win [\ref{fig:win42}] or a draw [\ref{fig:draw42}].
 
-Our player plays relatively good for the limited rules we use in the evaluation function. The number of moves that we can look ahead probably plays a more significant role. Throughout the game our player can look between 7 and 9 moves ahead (using 2 seconds each move). We did not optimize much in the alpha-beta search. If we would ever want to improve our player we could start by ordering the moves. In that way we could probably prune more of the tree and consequently look further ahead in the more interesting parts of the search tree. More improvements could be made in the evaluation function. One such improvement, which we didn't have enough the time for, is looking to the number of neighbours of every piece.
+Our player plays relatively well for the limited rules we use in the evaluation function. The number of moves that we can look ahead probably plays a more significant role. Throughout the game our player can look between 7 and 9 moves ahead (using 2 seconds each move). We did not optimize much in the alpha-beta search. If we would ever want to improve our player we could start by ordering the moves. In that way we could probably prune more of the tree and consequently look further ahead in the more interesting parts of the search tree.
 
 \section{Reproducing the results}
 Following are the steps required to reproduce our results:
