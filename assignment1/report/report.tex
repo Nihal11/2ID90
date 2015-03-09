@@ -121,8 +121,9 @@ Following are the steps required to reproduce our results:
 Keep in mind that results can vary with the time given per move. We ran all test games with 2 seconds per move.
 
 \section{References}
-\url{http://www.cs.columbia.edu/~devans/TIC/AB.html}
-%\url{http://stackoverflow.com/a/15626976/1928529} of \url{http://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning#Pseudocode} (Voor alphabeta pseudocode)
+Since we are no Draught experts at all, we read external sources such as \url{http://www.cs.columbia.edu/~devans/TIC/AB.html} to validate our approach. The take-away from that article is that the piece count is important, as well as the proximity of getting a king. This concept is similar to our implementation, which encouraged us to continue in this direction.
+
+Since the alpha-beta search algorithm is quite standard, we looked up pseudo-code from \url{http://stackoverflow.com/a/15626976} and converted that to Java.
 
 \section{Contributions}
 
