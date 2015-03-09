@@ -40,7 +40,7 @@ This report describes a minimax algorithm for an AI agent that plays Internation
 
 \section{The algorithm}
 \subsection{Alpha-Beta search}
-An implementation of the alpha-beta search algorithm is shown below. Line 3 refers to "the heuristic value", this is elaborated in section \ref{section:heuri}.
+An implementation of the alpha-beta search algorithm is shown below. Our player uses the alpha-beta search function with iterative deepening: \texttt{alphabeta()} is repeatedly invoked with \texttt{node}=\textit{current game state}, $\alpha = -\infty$, $\beta = +\infty$ and a positive and a strictly increasing integer (\texttt{remainingDepth}) until the allotted time for the turn is used up. When the algorithm terminates, the move that results in a game state with the "best" heuristic value is returned. See section \ref{section:heuri} for an elaboration of our heuristic value function (this also referred to in the pseudo-code at line 3).
 
 \begin{function}[H]
 	\DontPrintSemicolon
