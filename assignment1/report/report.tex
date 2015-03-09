@@ -35,7 +35,12 @@ Rob Wu (0787817)
 \begin{document}
 \maketitle
 \newpage
+\section*{Abstract}
+This report describes a minimax algorithm for an AI agent that plays International Draughts. This algorithm uses a alpha-beta search algorithm to find a good strategy for playing the game. Alpha-beta search is quite a standard algorithm in the field of Artificial Intelligence; the novelty that is presented in this report is the heuristic evaluation function.
+
 \section{The algorithm}
+\subsection{Alpha-Beta search}
+An implementation of the alpha-beta search algorithm is shown below. Line 3 refers to "the heuristic value", this is elaborated in section \ref{section:heuri}.
 
 \begin{function}[H]
 	\DontPrintSemicolon
@@ -63,7 +68,7 @@ Rob Wu (0787817)
 	}
 \end{function}
 
-\section{Evaluation function}
+\subsection{Heuristic evaluation function}\label{section:heuri}
 We intentionally kept our evaluation function simple and fast. Keeping it simple makes it easier to understand what is going on and thus easier to improve the magic numbers. Because of the simple evaluation function we also had an easier time fixing a bug we had in our alpha-beta algorithm. Keeping the function fast allows us to look forward as many turns as possible in the given time.
 
 The evaluation function returns a single integer value which reflects the state of the game. A negative value means that black is likely going to win, whereas a positive value means that white will probably win. When the game state is such that one of the players is certainly going to win, the returned value is an extreme value. E.g. if black will certainly win from white, then the returned value is the maximum representable negative integer.
@@ -71,11 +76,12 @@ The evaluation function returns a single integer value which reflects the state 
 If it is not set in stone which player will win, then the score is calculated from the number of pieces on the board and their position.
 We assume that the number of pieces is the most important indicator of success, so this feature is the primary score component. To make sure that this primary choice is always respected irrespective of the position scores, the scores are chosen such that the sum of the position scores can never exceed the smallest unit of the piece count score.
 
-The first score modifier is used to value the pieces that are on the board. For this part we only look at the kind of piece, white or black, uncrowned or king. We give a value of $1000$ to a white uncrowned piece. On advice of dr.ir. J.W. Wesselink we decided to value kings thrice as high as an uncrowned piece, so a white king is worth $3000$. This makes sure our player will work toward getting a king without giving up too many uncrowned pieces for that goal. The values of the black pieces are the opposite of the values of the white pieces, as we want to have a symmetric evaluation function.
+The piece score modifier is used to value the pieces that are on the board. For this part we only look at the kind of piece, white or black, uncrowned or king. We give a value of $1000$ to a white uncrowned piece. On advice of dr.ir. J.W. Wesselink we decided to value kings thrice as high as an uncrowned piece, so a white king is worth $3000$. This makes sure our player will work toward getting a king without giving up too many uncrowned pieces for that goal. The values of the black pieces are the opposite of the values of the white pieces, as we want to have a symmetric evaluation function.
 
-The second score modifier associates a value to a piece depending on their row position. The closer a piece is to the other side of the board, the higher its bonus score. This criteria exists to encourage reaching the other end in order to get a king, even when the AI agent cannot look that deep in the game tree. Because this criteria only exists to stimulate becoming a king, the bonus is only added to uncrowned pieces. Note that the piece count takes precedence over position, so the agent will not blindly offer pieces in an attempt to get a piece to the other end, because this action would negatively affect the piece count.\\
+The position score modifier associates a value to a piece depending on their row position. The closer a piece is to the other side of the board, the higher its bonus score. This criteria exists to encourage reaching the other end in order to get a king, even when the AI agent cannot look that deep in the game tree. Because this criteria only exists to stimulate becoming a king, the bonus is only added to uncrowned pieces. Note that the piece count takes precedence over position, so the agent will not unconditionally move pieces forwards in an attempt to get a piece to the other end, because this action would negatively affect the piece count (i.e. blindly moving forward allows the opponent to kill a piece).
+
 To avoid moving too many pieces to the other side of the board, the first row will get a higher bonus score than the first few rows, to encourage pieces to stay home. This allows them to prevent opposing pieces from being a king.
-\\
+
 A way to implement this bonus system is by awarding one bonus point to a piece for moving one row forwards. A disadvantage of this mechanism is that it does not differentiate between a piece that is already close to the end, and a piece that is still at first rows. To distinguish between both situations, the list of bonus scores for each row is a Fibonacci sequence. The final list of bonus scores is shown in table \ref{table:bonusscore}. There are at most 20 pieces per player. The maximum score for a piece is $31$, so the maximum bonus is not higher than $20\times 31 = 620$, which is well below $1000$ (the piece count score for an uncrowned piece).
 
 \begin{table}[ht]
