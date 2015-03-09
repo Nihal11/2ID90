@@ -36,22 +36,22 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
     };
     
     @Override
-    /** @return a random move **/
+    /** @return a move**/
     public Move getMove(DraughtsState state) {
         Move bestMove = state.getMoves().get(0);
         int reachedDepth = 0;
         try {
             int maxDepth = 1;
             List<Move> moves = state.getMoves();
+            // Find best move using iterative deepening
             while (maxDepth < 200) {
                 bestMove = getBestMove(state, maxDepth, moves);
                 reachedDepth = maxDepth;
                 maxDepth++;
             }
         } catch (AIStoppedException ex) {
-            System.out.println("Reached depth: " + reachedDepth);
-            
         }
+        System.out.println("Reached depth: " + reachedDepth);
         return bestMove;
     }
 
@@ -60,6 +60,10 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         return lastScore;
     }
     
+    // Return best move for this state. This function executes the first
+    //      step of the alphabeta search. By splitting the first step from
+    //      the other we can more easily optimize this step and we don't have
+    //      to return the best move on all depths
     Move getBestMove(GameState state, int maxDepth, List<Move> moves) throws AIStoppedException {
         Move bestMove = null;
         int bestScore = 0;
@@ -106,6 +110,8 @@ public class AlphaBetaPlayer extends DraughtsPlayer {
         shouldStop = true;
     }
     
+    // Standard alpha-beta algorithm with stop-check to enable stopping
+    // when deepening iteratively
     // White maximizes score, black minimizes
     int alphaBeta(GameNode node, int remainingDepth, int alpha, int beta) throws AIStoppedException {
         GameState state = node.getGameState();
