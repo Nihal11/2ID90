@@ -12,7 +12,7 @@ fi
 
 cd "$(dirname "$(realpath "$0")" )/spellchecker"
 
-if [ "$1" == "clean" ] ; then
+if [ "$1" = "clean" ] ; then
     ant clean
     exit
 fi
