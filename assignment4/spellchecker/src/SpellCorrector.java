@@ -40,8 +40,41 @@ public class SpellCorrector {
     {
         HashSet<String> ListOfWords = new HashSet<String>();
         
-        /** CODE TO BE ADDED **/
+        // Original word could be correct
+        ListOfWords.add(word);
         
+        // We only have to find words with Damerau-Levenshtein distance of at
+        // most 1 which means that each input word needs only be altered by at
+        // most 1 insertion, deletion, transposition or substitution
+
+        // Insertion
+        for (int i = 0; i <= word.length(); ++i) {
+            for (char newLetter : ALPHABET) {
+                ListOfWords.add(word.substring(0, i) + newLetter + word.substring(i));
+            }
+        }
+
+        // Deletion
+        for (int i = 0; i < word.length(); ++i) {
+            ListOfWords.add(word.substring(0, i) + word.substring(i + 1));
+        }
+
+        // Transposition
+        for (int i = 0; i < word.length() - 1; ++i) {
+            char[] mutableWord = word.toCharArray();
+            char first = mutableWord[i];
+            mutableWord[i] = mutableWord[i + 1];
+            mutableWord[i + 1] = first;
+            ListOfWords.add(new String(mutableWord));
+        }
+
+        // Substitution
+        for (int i = 0; i < word.length(); ++i) {
+            for (char newLetter : ALPHABET) {
+                ListOfWords.add(word.substring(0, i) + newLetter + word.substring(i + 1));
+            }
+        }
+
         return cr.inVocabulary(ListOfWords);
     }          
 }
