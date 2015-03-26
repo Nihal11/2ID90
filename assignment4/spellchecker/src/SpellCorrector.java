@@ -34,16 +34,48 @@ public class SpellCorrector {
                 generateSuggestions(suggestions, words, error1, error2, 0, "");
             }
         }
-        System.out.println("Number of suggestions: " + suggestions.size());
-        // TODO: Select sentence suggestion with highest probability of being correct
-        /** CODE TO BE ADDED **/
+        System.out.println("Number of suggestions: " + suggestions.size()); // TODO: Remove debugging output
+
+        // Select sentence suggestion with highest probability of being correct
+        double highestProbability = Double.NEGATIVE_INFINITY;
+        String bestSuggestion = "";
+        for (String suggestion : suggestions) {
+            double probability = calculateChannelModelProbability(suggestion, phrase);
+            if (probability > highestProbability) {
+                highestProbability = probability;
+                bestSuggestion = suggestion;
+            }
+        }
+        finalSuggestion = bestSuggestion;
+        System.out.println("Probability: " + highestProbability);
         
         return finalSuggestion.trim();
     }
 
+    public double calculateChannelModelProbability(String suggested, String incorrect) 
+    {
+        // 5.2.b: The method calculateChannel is meant to calculate the conditional
+        // probability of a presumably incorrect word given a
+        // correction. You need to decide whether a candidate suggestion
+        // for an aledgedly incorrect word is a deletion, insertion,
+        // substitution or a transposition, and what is the likelihood for
+        // this to occur based on the values in the confusion matrix (for
+        // which code is provided at the end of the method).
+        String[] sWords = suggested.split(" ");
+        double probability = 1;
+        for (int i = 0; i < sWords.length - 1; ++i) {
+            // Probability is op dit moment niet in de range [0..1],
+            // maar is wel hoger voor zinnen met grotere kans op correctheid (hoop ik)
+            probability *= cr.getSmoothedCount(sWords[i] + " " + sWords[i + 1]);
+        }
+        // TODO: Incorporate data from confusion matrix
+
+        return probability;
+    }
+         
     void generateSuggestions(Set<String> suggestions, String[] words, int error1, int error2, int index, String current) {
         if (index == words.length) {
-            suggestions.add(current);
+            suggestions.add(current.trim());
             return;
         }
         if (index == error1 || index == error2) {
@@ -55,14 +87,6 @@ public class SpellCorrector {
             generateSuggestions(suggestions, words, error1, error2, index + 1, current + words[index] + " ");
         }
     }
-    
-    public double calculateChannelModelProbability(String suggested, String incorrect) 
-    {
-         /** CODE TO BE ADDED **/
-        
-        return 0.0;
-    }
-         
       
     public HashSet<String> getCandidateWords(String word)
     {
