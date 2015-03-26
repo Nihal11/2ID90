@@ -115,11 +115,9 @@ public class CorpusReader
             throw new IllegalArgumentException("NGram must be non-empty.");
         }
         
-        double smoothedCount = 0.0;
-        
-        /** ADD CODE HERE **/
-        
-        
+        // Add 1 to smooth the count
+        double smoothedCount = getNGramCount(NGram) + 1;
+        // TODO: Check if this should return a probability or just the count
         return smoothedCount;        
     }
 }
