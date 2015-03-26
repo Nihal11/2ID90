@@ -69,6 +69,7 @@ public class SpellCorrector {
             probability *= cr.getSmoothedCount(sWords[i] + " " + sWords[i + 1]);
         }
         // TODO: Incorporate data from confusion matrix
+        // Could be usefull to refactor this class a bit and add the data already at getCandidateWords
 
         return probability;
     }
