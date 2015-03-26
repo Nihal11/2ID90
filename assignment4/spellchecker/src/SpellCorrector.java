@@ -1,4 +1,5 @@
 import java.util.HashSet;
+import java.util.Set;
 
 public class SpellCorrector {
     final private CorpusReader cr;
@@ -23,9 +24,36 @@ public class SpellCorrector {
         String[] words = phrase.split(" ");
         String finalSuggestion = "";
         
+        Set<String> suggestions = new HashSet();
+        // Generate all sentences with 0, 1, or 2 errors
+        for (int error1 = -1; error1 < words.length; ++error1) {
+            for (int error2 = error1; error2 < words.length; ++error2) {
+                // Error index -1 means no error
+                if (error2 == error1) continue; // Two errors at the same location is useless
+                if (error1 >= 0 && error2 - error1 < 2) continue; // There can't be 2 consecutive errors
+                generateSuggestions(suggestions, words, error1, error2, 0, "");
+            }
+        }
+        System.out.println("Number of suggestions: " + suggestions.size());
+        // TODO: Select sentence suggestion with highest probability of being correct
         /** CODE TO BE ADDED **/
         
         return finalSuggestion.trim();
+    }
+
+    void generateSuggestions(Set<String> suggestions, String[] words, int error1, int error2, int index, String current) {
+        if (index == words.length) {
+            suggestions.add(current);
+            return;
+        }
+        if (index == error1 || index == error2) {
+            Set<String> candidates = getCandidateWords(words[index]);
+            for (String candidate : candidates) {
+                generateSuggestions(suggestions, words, error1, error2, index + 1, current + candidate + " ");
+            }
+        } else {
+            generateSuggestions(suggestions, words, error1, error2, index + 1, current + words[index] + " ");
+        }
     }
     
     public double calculateChannelModelProbability(String suggested, String incorrect) 
