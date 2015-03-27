@@ -1,4 +1,6 @@
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class SpellCorrector {
@@ -22,34 +24,42 @@ public class SpellCorrector {
         }
             
         String[] words = phrase.split(" ");
-        String finalSuggestion = "";
-        
-        Set<String> suggestions = new HashSet();
-        // Generate all sentences with 0, 1, or 2 errors
-        for (int error1 = -1; error1 < words.length; ++error1) {
-            for (int error2 = error1; error2 < words.length; ++error2) {
-                // Error index -1 means no error
-                if (error2 == error1) continue; // Two errors at the same location is useless
-                if (error1 >= 0 && error2 - error1 < 2) continue; // There can't be 2 consecutive errors
-                generateSuggestions(suggestions, words, error1, error2, 0, "");
-            }
-        }
-        System.out.println("Number of suggestions: " + suggestions.size()); // TODO: Remove debugging output
+        IntermediateAnswer answer = new IntermediateAnswer(phrase);
 
-        // Select sentence suggestion with highest probability of being correct
-        double highestProbability = Double.NEGATIVE_INFINITY;
-        String bestSuggestion = "";
-        for (String suggestion : suggestions) {
-            double probability = calculateChannelModelProbability(suggestion, phrase);
-            if (probability > highestProbability) {
-                highestProbability = probability;
-                bestSuggestion = suggestion;
-            }
+        // Suggest the original sentence, without any corrections.
+        answer.update(phrase);
+
+        // For each word, generate a list of candidates.
+        List<Set<String>> alternativeWords = new ArrayList<>();
+        for (String word : words) {
+            alternativeWords.add(getCandidateWords(word));
         }
-        finalSuggestion = bestSuggestion;
-        System.out.println("Probability: " + highestProbability);
-        
-        return finalSuggestion.trim();
+
+        // Suggest sentences with one or two errors corrected.
+        for (int error1 = 0; error1 < words.length; ++error1) {
+            // Save word, in order to restore the original words at the end of the loop.
+            String original1 = words[error1];
+            for (String alternativeWord1 : alternativeWords.get(error1)) {
+                words[error1] = alternativeWord1;
+                // Try the sentence after correcting one error.
+                answer.update(String.join(" ", words));
+
+                // Try two errors if possible.
+                // Use +2 because there must be at least one good word in between the errors.
+                for (int error2 = error1 + 2; error2 < words.length; ++error2) {
+                    String original2 = words[error2];
+                    for (String alternativeWord2 : alternativeWords.get(error2)) {
+                        words[error2] = alternativeWord2;
+                        // Try the sentence after correcting two errors.
+                        answer.update(String.join(" ", words));
+                    }
+                    words[error2] = original2;
+                }
+            }
+            words[error1] = original1;
+        }
+
+        return answer.getSuggestion();
     }
 
     public double calculateChannelModelProbability(String suggested, String incorrect) 
@@ -73,28 +83,13 @@ public class SpellCorrector {
 
         return probability;
     }
-         
-    void generateSuggestions(Set<String> suggestions, String[] words, int error1, int error2, int index, String current) {
-        if (index == words.length) {
-            suggestions.add(current.trim());
-            return;
-        }
-        if (index == error1 || index == error2) {
-            Set<String> candidates = getCandidateWords(words[index]);
-            for (String candidate : candidates) {
-                generateSuggestions(suggestions, words, error1, error2, index + 1, current + candidate + " ");
-            }
-        } else {
-            generateSuggestions(suggestions, words, error1, error2, index + 1, current + words[index] + " ");
-        }
-    }
-      
+
+    /**
+     * Generate a set of possible corrections for the given word.
+     */
     public HashSet<String> getCandidateWords(String word)
     {
         HashSet<String> ListOfWords = new HashSet<String>();
-        
-        // Original word could be correct
-        ListOfWords.add(word);
         
         // We only have to find words with Damerau-Levenshtein distance of at
         // most 1 which means that each input word needs only be altered by at
@@ -130,4 +125,32 @@ public class SpellCorrector {
 
         return cr.inVocabulary(ListOfWords);
     }          
+
+    private class IntermediateAnswer {
+        private final String original;
+        private String suggestion = "";
+        private double probability = 0;
+
+        IntermediateAnswer(String original) {
+            this.original = original;
+        }
+
+        /**
+         * Propose an alternative to the current phrase. If the suggestion has a higher
+         * probability of being correct, the instance's state is updated with the new suggestion.
+         *
+         * @param suggestion - The suggested sentence.
+         */
+        void update(final String suggestion) {
+            double probability = calculateChannelModelProbability(suggestion, original);
+            if (probability > this.probability) {
+                this.suggestion = suggestion;
+                this.probability = probability;
+            }
+        }
+
+        String getSuggestion() {
+            return suggestion.trim();
+        }
+    };
 }
