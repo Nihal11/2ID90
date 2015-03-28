@@ -91,9 +91,13 @@ public class SpellCorrector {
      * @return A map where the words are keys, and the values the noisy channel probability. (TODO implement this)
      * @return A set consisting of possible candidate corrections for a word.
      */
-    private Set<String> getCandidateWords(String word)
+    private Set<String> getCandidateWords(String wordWithoutWhitespace)
     {
+        // The whitespace is necessary for add/substitution
+        final String word = " " + wordWithoutWhitespace + " ";
+
         Map<String,Double> candidates = new HashMap<>();
+
         /**
          * @param start - Start position of word to be replaced.
          * @param end - Position after word to be replaced.
@@ -102,6 +106,7 @@ public class SpellCorrector {
         TriConsumer<Integer,Integer,String> collector = (start, end, replacement) ->
         {
             String candidate = word.substring(0, start) + replacement + word.substring(end);
+            candidate = candidate.trim();
             if (!cr.inVocabulary(candidate)) {
                 // Ignore non-words.
                 return;
@@ -126,25 +131,26 @@ public class SpellCorrector {
         // most 1 insertion, deletion, transposition or substitution
 
         // Insertion
-        for (int i = 0; i <= word.length(); ++i) {
+        for (int i = 1; i < word.length(); ++i) {
             for (char newLetter : ALPHABET) {
-                collector.call(i, i, Character.toString(newLetter));
+                String replacement = new String(new char[]{word.charAt(i), newLetter});
+                collector.call(i - 1, i, replacement);
             }
         }
 
         // Deletion
-        for (int i = 0; i < word.length(); ++i) {
-            collector.call(i, i + 1, "");
+        for (int i = 1; i < word.length() - 1; ++i) {
+            collector.call(i - 1, i + 1, word.substring(i, i + 1));
         }
 
         // Transposition
-        for (int i = 0; i < word.length() - 1; ++i) {
+        for (int i = 1; i < word.length() - 2; ++i) {
             String replacement = new String(new char[]{word.charAt(i + 1), word.charAt(i)});
             collector.call(i, i + 2, replacement);
         }
 
         // Substitution
-        for (int i = 0; i < word.length(); ++i) {
+        for (int i = 1; i < word.length() - 1; ++i) {
             for (char newLetter : ALPHABET) {
                 collector.call(i, i + 1, Character.toString(newLetter));
             }
