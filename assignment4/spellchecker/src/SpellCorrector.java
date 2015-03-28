@@ -94,6 +94,26 @@ public class SpellCorrector {
     private Set<String> getCandidateWords(String word)
     {
         Map<String,Double> candidates = new HashMap<>();
+        /**
+         * @param start - Start position of word to be replaced.
+         * @param end - Position after word to be replaced.
+         * @param replacement
+         */
+        TriConsumer<Integer,Integer,String> collector = (start, end, replacement) ->
+        {
+            String candidate = word.substring(0, start) + replacement + word.substring(end);
+            if (!cr.inVocabulary(candidate)) {
+                // Ignore non-words.
+                return;
+            }
+            String original = word.substring(start, end);
+            // TODO: editProbability should be a probability.
+            double editProbability = cmr.getConfusionCount(original, replacement);
+            double wordProbability = editProbability;
+            // TODO: Account for word frequency.
+
+            candidates.put(candidate, wordProbability);
+        };
         
         // We only have to find words with Damerau-Levenshtein distance of at
         // most 1 which means that each input word needs only be altered by at
@@ -102,28 +122,25 @@ public class SpellCorrector {
         // Insertion
         for (int i = 0; i <= word.length(); ++i) {
             for (char newLetter : ALPHABET) {
-                maybeAddCandidate(candidates, word.substring(0, i) + newLetter + word.substring(i));
+                collector.call(i, i, Character.toString(newLetter));
             }
         }
 
         // Deletion
         for (int i = 0; i < word.length(); ++i) {
-            maybeAddCandidate(candidates, word.substring(0, i) + word.substring(i + 1));
+            collector.call(i, i + 1, "");
         }
 
         // Transposition
         for (int i = 0; i < word.length() - 1; ++i) {
-            char[] mutableWord = word.toCharArray();
-            char first = mutableWord[i];
-            mutableWord[i] = mutableWord[i + 1];
-            mutableWord[i + 1] = first;
-            maybeAddCandidate(candidates, new String(mutableWord));
+            String replacement = new String(new char[]{word.charAt(i + 1), word.charAt(i)});
+            collector.call(i, i + 2, replacement);
         }
 
         // Substitution
         for (int i = 0; i < word.length(); ++i) {
             for (char newLetter : ALPHABET) {
-                maybeAddCandidate(candidates, word.substring(0, i) + newLetter + word.substring(i + 1));
+                collector.call(i, i + 1, Character.toString(newLetter));
             }
         }
 
@@ -131,17 +148,9 @@ public class SpellCorrector {
         return candidates.keySet();
     }
 
-    /**
-     * Add <code>candidate</code> and its 
-     */
-    private void maybeAddCandidate(Map<String,Double> candidates, String candidate) {
-        if (!cr.inVocabulary(candidate)) {
-            return;
-        }
-        double wordProbability = 0.0;
-        // TODO: Calculate word probability.
-        candidates.put(candidate, wordProbability);
-    }
+    private interface TriConsumer<T, U, V> {
+        void call(T t, U u, V v);
+    };
 
     private class IntermediateAnswer {
         private final String original;
