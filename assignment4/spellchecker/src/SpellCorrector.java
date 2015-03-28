@@ -107,10 +107,16 @@ public class SpellCorrector {
                 return;
             }
             String original = word.substring(start, end);
-            // TODO: editProbability should be a probability.
-            double editProbability = cmr.getConfusionCount(original, replacement);
-            double wordProbability = editProbability;
-            // TODO: Account for word frequency.
+            int charsCount = cmr.getCharsCount(original);
+            if (charsCount == 0) {
+                // The given character sequence is never misspelled in this way - ignore it.
+                return;
+            }
+            // This is the scoring method as described by Kernighan et al. (1990) in
+            // "A spelling correction program based on a noisy channel model".
+            double prior = (cr.getNGramCount(candidate) + 0.5) / cr.getTotalWordCount();
+            double editProbability = cmr.getConfusionCount(original, replacement) / charsCount;
+            double wordProbability = prior * editProbability;
 
             candidates.put(candidate, wordProbability);
         };
