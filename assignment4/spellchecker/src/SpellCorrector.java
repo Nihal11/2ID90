@@ -2,7 +2,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class SpellCorrector {
     final private CorpusReader cr;
@@ -31,7 +30,7 @@ public class SpellCorrector {
         answer.update(phrase);
 
         // For each word, generate a list of candidates.
-        List<Set<String>> alternativeWords = new ArrayList<>();
+        List<Map<String,Double>> alternativeWords = new ArrayList<>();
         for (String word : words) {
             alternativeWords.add(getCandidateWords(word));
         }
@@ -40,7 +39,7 @@ public class SpellCorrector {
         for (int error1 = 0; error1 < words.length; ++error1) {
             // Save word, in order to restore the original words at the end of the loop.
             String original1 = words[error1];
-            for (String alternativeWord1 : alternativeWords.get(error1)) {
+            for (String alternativeWord1 : alternativeWords.get(error1).keySet()) {
                 words[error1] = alternativeWord1;
                 // Try the sentence after correcting one error.
                 answer.update(String.join(" ", words));
@@ -49,7 +48,7 @@ public class SpellCorrector {
                 // Use +2 because there must be at least one good word in between the errors.
                 for (int error2 = error1 + 2; error2 < words.length; ++error2) {
                     String original2 = words[error2];
-                    for (String alternativeWord2 : alternativeWords.get(error2)) {
+                    for (String alternativeWord2 : alternativeWords.get(error2).keySet()) {
                         words[error2] = alternativeWord2;
                         // Try the sentence after correcting two errors.
                         answer.update(String.join(" ", words));
@@ -88,10 +87,9 @@ public class SpellCorrector {
     /**
      * Generate a set of possible corrections for the given word.
      *
-     * @return A map where the words are keys, and the values the noisy channel probability. (TODO implement this)
-     * @return A set consisting of possible candidate corrections for a word.
+     * @return A map where the keys are correction candidates, and the values the noisy channel probability.
      */
-    private Set<String> getCandidateWords(String wordWithoutWhitespace)
+    private Map<String,Double> getCandidateWords(String wordWithoutWhitespace)
     {
         // The whitespace is necessary for add/substitution
         final String word = " " + wordWithoutWhitespace + " ";
@@ -156,8 +154,7 @@ public class SpellCorrector {
             }
         }
 
-        // TODO: Just return candidates.
-        return candidates.keySet();
+        return candidates;
     }
 
     private interface TriConsumer<T, U, V> {
