@@ -1,6 +1,7 @@
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class SpellCorrector {
@@ -86,10 +87,13 @@ public class SpellCorrector {
 
     /**
      * Generate a set of possible corrections for the given word.
+     *
+     * @return A map where the words are keys, and the values the noisy channel probability. (TODO implement this)
+     * @return A set consisting of possible candidate corrections for a word.
      */
-    public HashSet<String> getCandidateWords(String word)
+    private Set<String> getCandidateWords(String word)
     {
-        HashSet<String> ListOfWords = new HashSet<String>();
+        Map<String,Double> candidates = new HashMap<>();
         
         // We only have to find words with Damerau-Levenshtein distance of at
         // most 1 which means that each input word needs only be altered by at
@@ -98,13 +102,13 @@ public class SpellCorrector {
         // Insertion
         for (int i = 0; i <= word.length(); ++i) {
             for (char newLetter : ALPHABET) {
-                ListOfWords.add(word.substring(0, i) + newLetter + word.substring(i));
+                maybeAddCandidate(candidates, word.substring(0, i) + newLetter + word.substring(i));
             }
         }
 
         // Deletion
         for (int i = 0; i < word.length(); ++i) {
-            ListOfWords.add(word.substring(0, i) + word.substring(i + 1));
+            maybeAddCandidate(candidates, word.substring(0, i) + word.substring(i + 1));
         }
 
         // Transposition
@@ -113,18 +117,31 @@ public class SpellCorrector {
             char first = mutableWord[i];
             mutableWord[i] = mutableWord[i + 1];
             mutableWord[i + 1] = first;
-            ListOfWords.add(new String(mutableWord));
+            maybeAddCandidate(candidates, new String(mutableWord));
         }
 
         // Substitution
         for (int i = 0; i < word.length(); ++i) {
             for (char newLetter : ALPHABET) {
-                ListOfWords.add(word.substring(0, i) + newLetter + word.substring(i + 1));
+                maybeAddCandidate(candidates, word.substring(0, i) + newLetter + word.substring(i + 1));
             }
         }
 
-        return cr.inVocabulary(ListOfWords);
-    }          
+        // TODO: Just return candidates.
+        return candidates.keySet();
+    }
+
+    /**
+     * Add <code>candidate</code> and its 
+     */
+    private void maybeAddCandidate(Map<String,Double> candidates, String candidate) {
+        if (!cr.inVocabulary(candidate)) {
+            return;
+        }
+        double wordProbability = 0.0;
+        // TODO: Calculate word probability.
+        candidates.put(candidate, wordProbability);
+    }
 
     private class IntermediateAnswer {
         private final String original;
