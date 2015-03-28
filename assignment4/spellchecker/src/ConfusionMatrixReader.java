@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ConfusionMatrixReader {
     
@@ -27,23 +29,34 @@ public class ConfusionMatrixReader {
         FileInputStream fis;
         fis = new FileInputStream(DATAFILE_LOC);
         BufferedReader in = new BufferedReader(new InputStreamReader(fis));
+
+        // RegEx that matches "<error>|<correct> <count>"
+        Pattern p = Pattern.compile(
+                // Group 1: error|correct
+                "(" +
+                    // Group 2: error
+                    "([^|]+)" +
+                    "\\|" +
+                    // Group 3: correct
+                    "(.+)" +
+                ")" +
+                " " +
+                // Group 4: Count
+                "([0-9]+)");
         
         while( in.ready() )
         {
             String line = in.readLine();
-            int space = line.lastIndexOf(' ');
-            String keys = line.substring(0,space);
-            try {
-                int count = Integer.parseInt(line.substring(space+1));
-                confusionMatrix.put(keys, count);
+            Matcher m = p.matcher(line);
+            if (m.matches()) {
+                String errorAndCorrect = m.group(1);
+                String error = m.group(2);
+                int count = Integer.parseInt(m.group(4));
 
-                String key = keys.substring(0,keys.indexOf('|'));  
-                Integer value = countMatrix.get(key);
-                if (value==null) {
-                    value = 0;
-                }
-                countMatrix.put(key, value+count);
-            } catch(NumberFormatException e) {
+                assert confusionMatrix.get(errorAndCorrect) == null;
+                confusionMatrix.put(errorAndCorrect, count);
+                countMatrix.put(error, countMatrix.getOrDefault(error, 0) + count);
+            } else {
                 System.err.println("problems with string <"+line+">");
             }
         }
@@ -59,7 +72,15 @@ public class ConfusionMatrixReader {
      */
     public int getConfusionCount(String error, String correct) 
     {
-        Integer count = confusionMatrix.get(error+"|"+correct);
-        return count==null?0:count;
+        String errorAndCorrect = error + "|" + correct;
+        return confusionMatrix.getOrDefault(errorAndCorrect, 0);
+    }
+
+    /**
+     * @param charSequence
+     * @return The number of (erroneous) occurrences of |charSequence| in the training data.
+     */
+    public int getCharsCount(String charSequence) {
+        return countMatrix.getOrDefault(charSequence, 0);
     }
 }
