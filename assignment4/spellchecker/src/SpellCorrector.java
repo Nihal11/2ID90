@@ -130,7 +130,7 @@ public class SpellCorrector {
         // Insertion
         for (int i = 1; i < word.length(); ++i) {
             for (char newLetter : ALPHABET) {
-                String replacement = new String(new char[]{word.charAt(i), newLetter});
+                String replacement = new String(new char[]{word.charAt(i - 1), newLetter});
                 collector.call(i - 1, i, replacement);
             }
         }
@@ -258,7 +258,8 @@ public class SpellCorrector {
                 // There is no word before the first word.
                 probability = 1;
             } else {
-                probability = cr.getSmoothedCount(suggestion[wordIndex - 1] + " " + word);
+                probability = cr.getSmoothedCount(suggestion[wordIndex - 1] + " " + word) /
+                    cr.getSmoothedCount(suggestion[wordIndex - 1]);
             }
             // TODO: Replace "1" with a constant. If it is too low (0), then correct words
             // may be replaced. If it is too high (1), then existing (but incorrect) words
