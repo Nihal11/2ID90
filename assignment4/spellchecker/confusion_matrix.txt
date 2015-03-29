@@ -413,7 +413,6 @@ eo|e 20
 di|d 20
 cs|c 20
 bu|b 20
-| 19
 x|xc 19
 t|tl 19
 s|sp 19
