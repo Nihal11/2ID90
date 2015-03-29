@@ -57,32 +57,6 @@ public class SpellCorrector {
         return answer.getSuggestion();
     }
 
-    public double calculateChannelModelProbability(String suggested, String incorrect) 
-    {
-        // NOTE: This method is not used! See IntermediateAnswer::getWordProbabilityAt for
-        // the logic.
-        // TODO: Get rid of this method.
-    
-        // 5.2.b: The method calculateChannel is meant to calculate the conditional
-        // probability of a presumably incorrect word given a
-        // correction. You need to decide whether a candidate suggestion
-        // for an aledgedly incorrect word is a deletion, insertion,
-        // substitution or a transposition, and what is the likelihood for
-        // this to occur based on the values in the confusion matrix (for
-        // which code is provided at the end of the method).
-        String[] sWords = suggested.split(" ");
-        double probability = 1;
-        for (int i = 0; i < sWords.length - 1; ++i) {
-            // Probability is op dit moment niet in de range [0..1],
-            // maar is wel hoger voor zinnen met grotere kans op correctheid (hoop ik)
-            probability *= cr.getSmoothedCount(sWords[i] + " " + sWords[i + 1]);
-        }
-        // TODO: Incorporate data from confusion matrix
-        // Could be usefull to refactor this class a bit and add the data already at getCandidateWords
-
-        return probability;
-    }
-
     /**
      * Generate a set of possible corrections for the given word.
      *
@@ -247,6 +221,9 @@ public class SpellCorrector {
             return diff > 0;
         }
 
+        /**
+         * Calculate the probability that a word at the given location is correct.
+         */
         private double getWordProbabilityAt(int wordIndex) {
             String word = suggestion[wordIndex];
             double probability;
