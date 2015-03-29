@@ -205,7 +205,7 @@ public class SpellCorrector {
             suggestion[wordIndex] = suggestedWord;
 
             if (recalculateProbabilityAt(wordIndex)) {
-                bestSuggestion[wordIndex] = suggestedWord;
+                bestSuggestion = suggestion.clone();
                 bestProbabilitySum = probabilitySum;
             }
         }
