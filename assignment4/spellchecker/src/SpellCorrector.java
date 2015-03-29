@@ -72,14 +72,18 @@ public class SpellCorrector {
             wordProbabilities[error1] = originalProb1;
         }
 
-        System.out.println(bestProbability);
         return String.join(" ", bestSuggestion);
     }
 
     double getSuggestionProbability(String[] suggestion, Double[] wordProbabilities) {
         double probability = 1;
+        // Use single word probability (unigram and edit probability)
         for (int i = 0; i < wordProbabilities.length; ++i) {
             probability *= wordProbabilities[i];
+        }
+        // Use bigram probability
+        for (int i = 0; i < suggestion.length - 1; ++i) {
+            probability *= cr.getSmoothedCount(suggestion[i] + " " + suggestion[i + 1]);
         }
         return probability;
     }
