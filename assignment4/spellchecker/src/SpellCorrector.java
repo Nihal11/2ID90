@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,10 +25,6 @@ public class SpellCorrector {
         }
             
         String[] words = phrase.split(" ");
-        IntermediateAnswer answer = new IntermediateAnswer(phrase);
-
-        // Suggest the original sentence, without any corrections.
-        answer.update(phrase);
 
         // For each word, generate a list of candidates.
         List<Map<String,Double>> alternativeWords = new ArrayList<>();
@@ -35,28 +32,26 @@ public class SpellCorrector {
             alternativeWords.add(getCandidateWords(word));
         }
 
+        IntermediateAnswer answer = new IntermediateAnswer(words, alternativeWords);
+
         // Suggest sentences with one or two errors corrected.
         for (int error1 = 0; error1 < words.length; ++error1) {
             // Save word, in order to restore the original words at the end of the loop.
-            String original1 = words[error1];
             for (String alternativeWord1 : alternativeWords.get(error1).keySet()) {
-                words[error1] = alternativeWord1;
                 // Try the sentence after correcting one error.
-                answer.update(String.join(" ", words));
+                answer.update(error1, alternativeWord1);
 
                 // Try two errors if possible.
                 // Use +2 because there must be at least one good word in between the errors.
                 for (int error2 = error1 + 2; error2 < words.length; ++error2) {
-                    String original2 = words[error2];
                     for (String alternativeWord2 : alternativeWords.get(error2).keySet()) {
-                        words[error2] = alternativeWord2;
                         // Try the sentence after correcting two errors.
-                        answer.update(String.join(" ", words));
+                        answer.update(error2, alternativeWord2);
                     }
-                    words[error2] = original2;
+                    answer.restore(error2);
                 }
             }
-            words[error1] = original1;
+            answer.restore(error1);
         }
 
         return answer.getSuggestion();
@@ -64,6 +59,10 @@ public class SpellCorrector {
 
     public double calculateChannelModelProbability(String suggested, String incorrect) 
     {
+        // NOTE: This method is not used! See IntermediateAnswer::getWordProbabilityAt for
+        // the logic.
+        // TODO: Get rid of this method.
+    
         // 5.2.b: The method calculateChannel is meant to calculate the conditional
         // probability of a presumably incorrect word given a
         // correction. You need to decide whether a candidate suggestion
@@ -117,8 +116,8 @@ public class SpellCorrector {
             }
             // This is the scoring method as described by Kernighan et al. (1990) in
             // "A spelling correction program based on a noisy channel model".
-            double prior = (cr.getNGramCount(candidate) + 0.5) / cr.getTotalWordCount();
-            double editProbability = cmr.getConfusionCount(original, replacement) / charsCount;
+            double prior = (cr.getNGramCount(candidate) + 0.5) / cr.getVocabularySize();
+            double editProbability = cmr.getConfusionCount(original, replacement) / (double)charsCount;
             double wordProbability = prior * editProbability;
 
             candidates.put(candidate, wordProbability);
@@ -162,30 +161,112 @@ public class SpellCorrector {
     };
 
     private class IntermediateAnswer {
-        private final String original;
-        private String suggestion = "";
-        private double probability = 0;
+        // The words of the original sentence.
+        private final String[] original;
+        // A list of suggestions, stored in a map (key = candidate, value = word probability).
+        private final List<Map<String,Double>> alternativeWords;
 
-        IntermediateAnswer(String original) {
-            this.original = original;
+        // The current suggestion, per-word probability and summed probability.
+        private String[] suggestion;
+        private double[] probabilities;
+        private double probabilitySum;
+
+        // The best suggestion and its probability.
+        private String[] bestSuggestion = {};
+        private double bestProbabilitySum = 0;
+
+        IntermediateAnswer(String[] original, List<Map<String,Double>> alternativeWords) {
+            this.original = original.clone();
+            this.alternativeWords = alternativeWords;
+            this.suggestion = original.clone();
+
+            // Calculate the probabilities of the original word, without any correction.
+            probabilities = new double[original.length];
+            Arrays.fill(probabilities, 0);
+            probabilitySum = 0;
+            for (int i = 0; i < suggestion.length; ++i) {
+                double probability = getWordProbabilityAt(i);
+                probabilities[i] = probability;
+                probabilitySum += probability;
+            }
+
+            this.bestSuggestion = suggestion.clone();
+            this.bestProbabilitySum = probabilitySum;
         }
 
         /**
          * Propose an alternative to the current phrase. If the suggestion has a higher
          * probability of being correct, the instance's state is updated with the new suggestion.
          *
-         * @param suggestion - The suggested sentence.
+         * @param wordIndex - The position where the word will be changed.
+         * @param suggestion - The suggested word.
          */
-        void update(final String suggestion) {
-            double probability = calculateChannelModelProbability(suggestion, original);
-            if (probability > this.probability) {
-                this.suggestion = suggestion;
-                this.probability = probability;
+        void update(int wordIndex, String suggestedWord) {
+            suggestion[wordIndex] = suggestedWord;
+
+            if (recalculateProbabilityAt(wordIndex)) {
+                bestSuggestion[wordIndex] = suggestedWord;
+                bestProbabilitySum = probabilitySum;
             }
         }
 
+        /**
+         * Restore the original word at the given index.
+         *
+         * @param wordIndex
+         */
+        void restore(int wordIndex) {
+            suggestion[wordIndex] = original[wordIndex];
+            recalculateProbabilityAt(wordIndex);
+        }
+
         String getSuggestion() {
-            return suggestion.trim();
+            return String.join(" ", bestSuggestion);
+        }
+
+        /**
+         * @param wordIndex A number in the range [0, number of words in |original|]
+         * @return Whether the overall probability increased since the last check.
+         */
+        private boolean recalculateProbabilityAt(int wordIndex) {
+            double pOriginal = probabilities[wordIndex];
+            probabilities[wordIndex] = getWordProbabilityAt(wordIndex);
+            double diff = probabilities[wordIndex] - pOriginal;
+
+            // Changing a word may affect the probability of the next word, because the
+            // algorithm takes the previous word into account in the calculation of word
+            // probability. So, if this is not the last word, recalculate the probability
+            // of the next word as well.
+            if (wordIndex != probabilities.length - 1) {
+                double pNextOriginal = probabilities[wordIndex + 1];
+                probabilities[wordIndex + 1] = getWordProbabilityAt(wordIndex + 1);
+                diff += probabilities[wordIndex + 1] - pNextOriginal;
+            }
+            probabilitySum += diff;
+            //System.out.println(String.format("%s %s", suggestion[wordIndex], diff));
+            return diff > 0;
+        }
+
+        private double getWordProbabilityAt(int wordIndex) {
+            String word = suggestion[wordIndex];
+            double probability;
+            if (!cr.inVocabulary(word)) {
+                // Words that are not in the dictionary MUST be corrected.
+                return 0;
+            }
+            if (wordIndex == 0) {
+                // There is no word before the first word.
+                probability = 1;
+            } else {
+                probability = cr.getSmoothedCount(suggestion[wordIndex - 1] + " " + word);
+            }
+            // TODO: Replace "1" with a constant. If it is too low (0), then correct words
+            // may be replaced. If it is too high (1), then existing (but incorrect) words
+            // could still stick around.
+            // For now, be conversative by not lowering the probability if the word does
+            // exist in the dictionary.
+            probability *= alternativeWords.get(wordIndex).getOrDefault(word, 1.0);
+            return probability;
         }
     };
 }
