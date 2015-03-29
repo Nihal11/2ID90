@@ -111,7 +111,7 @@ public class SpellCorrector {
 
         // Deletion
         for (int i = 1; i < word.length() - 1; ++i) {
-            collector.call(i - 1, i + 1, word.substring(i, i + 1));
+            collector.call(i - 1, i + 1, word.substring(i - 1, i));
         }
 
         // Transposition
