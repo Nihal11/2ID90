@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 public class ConfusionMatrixReader {
     
-    final static String DATAFILE_LOC = "confusion_matrix_Kernighan.txt";
+    final static String DATAFILE_LOC = "confusion_matrix.txt";
     final private HashMap<String,Integer> confusionMatrix = new HashMap<>();
     final private HashMap<String,Integer> countMatrix = new HashMap<>();
     public ConfusionMatrixReader() 
