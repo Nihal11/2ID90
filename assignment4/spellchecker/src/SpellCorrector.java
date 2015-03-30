@@ -146,11 +146,11 @@ public class SpellCorrector {
         // The current suggestion, per-word probability and summed probability.
         private String[] suggestion;
         private double[] probabilities;
-        private double probabilitySum;
+        private double probabilityProduct;
 
         // The best suggestion and its probability.
         private String[] bestSuggestion = {};
-        private double bestProbabilitySum = 0;
+        private double bestProbabilityProduct = 0;
 
         IntermediateAnswer(String[] original, List<Map<String,Double>> alternativeWords) {
             this.original = original.clone();
@@ -160,15 +160,15 @@ public class SpellCorrector {
             // Calculate the probabilities of the original word, without any correction.
             probabilities = new double[original.length];
             Arrays.fill(probabilities, 0);
-            probabilitySum = 0;
+            probabilityProduct = 0;
             for (int i = 0; i < suggestion.length; ++i) {
                 double probability = getWordProbabilityAt(i);
                 probabilities[i] = probability;
-                probabilitySum += probability;
+                probabilityProduct += probability;
             }
 
             this.bestSuggestion = suggestion.clone();
-            this.bestProbabilitySum = probabilitySum;
+            this.bestProbabilityProduct = probabilityProduct;
         }
 
         /**
@@ -183,7 +183,7 @@ public class SpellCorrector {
 
             if (recalculateProbabilityAt(wordIndex)) {
                 bestSuggestion = suggestion.clone();
-                bestProbabilitySum = probabilitySum;
+                bestProbabilityProduct = probabilityProduct;
             }
         }
 
@@ -208,7 +208,8 @@ public class SpellCorrector {
         private boolean recalculateProbabilityAt(int wordIndex) {
             double pOriginal = probabilities[wordIndex];
             probabilities[wordIndex] = getWordProbabilityAt(wordIndex);
-            double diff = probabilities[wordIndex] - pOriginal;
+            double oldProduct = pOriginal;
+            double newProduct = probabilities[wordIndex];
 
             // Changing a word may affect the probability of the next word, because the
             // algorithm takes the previous word into account in the calculation of word
@@ -217,11 +218,13 @@ public class SpellCorrector {
             if (wordIndex != probabilities.length - 1) {
                 double pNextOriginal = probabilities[wordIndex + 1];
                 probabilities[wordIndex + 1] = getWordProbabilityAt(wordIndex + 1);
-                diff += probabilities[wordIndex + 1] - pNextOriginal;
+                oldProduct *= pNextOriginal;
+                newProduct *= probabilities[wordIndex + 1];
             }
-            probabilitySum += diff;
+            probabilityProduct *= newProduct;
+            probabilityProduct /= oldProduct;
             //System.out.println(String.format("%s %s", suggestion[wordIndex], diff));
-            return diff > 0;
+            return newProduct > oldProduct;
         }
 
         /**
