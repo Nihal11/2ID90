@@ -93,8 +93,15 @@ public class SpellCorrector {
             double prior = (cr.getNGramCount(candidate) + 0.5) / cr.getVocabularySize();
             double editProbability = cmr.getConfusionCount(original, replacement) / (double)charsCount;
             double wordProbability = prior * editProbability;
-            // TODO: Sum probabilities if word can be formed in multiple ways,
+
+            // Sum probabilities if word can be formed in multiple ways,
             //       (e.g. acress->acres: ss|s and es|e)
+            wordProbability += candidates.getOrDefault(candidate, 0.0);
+
+            if (wordProbability > 1) {
+                // This is unlikely, but just in case (ensure that probability <= 1).
+                wordProbability = 1;
+            }
 
             candidates.put(candidate, wordProbability);
         };
