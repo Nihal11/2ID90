@@ -29,8 +29,8 @@ public class SpellChecker {
     static void nonPeachTest(SpellCorrector sc) throws IOException { 
             String[] sentences = {
 //                "at the hme locations there were traces of water",
-//                "helo ladies and gentelmen",
-//                "kind retards",
+                "helo ladies and gentelmen",
+                "kind retards",
 //                "this assay allowed us to measure a wide variety of conditions",
 //                "this assay allowed us to measure a wide variety of conitions",
 //                "this assay allowed us to meassure a wide variety of conditions",

@@ -83,7 +83,7 @@ public class SpellCorrector {
         }
         // Use bigram probability
         for (int i = 0; i < suggestion.length - 1; ++i) {
-            probability *= cr.getSmoothedCount(suggestion[i] + " " + suggestion[i + 1]);
+            probability *= cr.getSmoothedCount(suggestion[i] + " " + suggestion[i + 1]) / (cr.getSmoothedCount(suggestion[i]));
         }
         return probability;
     }
