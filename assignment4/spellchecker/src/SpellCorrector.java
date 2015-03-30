@@ -3,7 +3,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 public class SpellCorrector {
     final private CorpusReader cr;
@@ -29,63 +28,33 @@ public class SpellCorrector {
 
         // For each word, generate a list of candidates.
         List<Map<String,Double>> alternativeWords = new ArrayList<>();
-        Double[] wordProbabilities = new Double[words.length];
-        int i = 0;
         for (String word : words) {
-            Map<String,Double> candidates = getCandidateWords(word);
-            alternativeWords.add(candidates);
-            wordProbabilities[i] = candidates.getOrDefault(word, 0.);
-            i++;
+            alternativeWords.add(getCandidateWords(word));
         }
 
-        double bestProbability = Double.NEGATIVE_INFINITY;
-        String[] bestSuggestion = words.clone();
+        IntermediateAnswer answer = new IntermediateAnswer(words, alternativeWords);
 
+        // Suggest sentences with one or two errors corrected.
         for (int error1 = 0; error1 < words.length; ++error1) {
-            String originalWord1 = words[error1];
-            Double originalProb1 = wordProbabilities[error1];
-            for (Map.Entry<String, Double> entry1 : alternativeWords.get(error1).entrySet()) {
-                String alternativeWord1 = entry1.getKey();
-                words[error1] = alternativeWord1;
-                wordProbabilities[error1] = entry1.getValue();
-                // TODO: Remove Math.min() hack and just calculate probability here directly when sentence has < 3 words
+            // Save word, in order to restore the original words at the end of the loop.
+            for (String alternativeWord1 : alternativeWords.get(error1).keySet()) {
+                // Try the sentence after correcting one error.
+                answer.update(error1, alternativeWord1);
+
+                // Try two errors if possible.
                 // Use +2 because there must be at least one good word in between the errors.
-                for (int error2 = error1 + Math.min(words.length - 1, 2); error2 < words.length; ++error2) {
-                    String originalWord2 = words[error2];
-                    Double originalProb2 = wordProbabilities[error2];
-                    for (Map.Entry<String, Double> entry2 : alternativeWords.get(error2).entrySet()) {
-                        String alternativeWord2 = entry2.getKey();
-                        words[error2] = alternativeWord2;
-                        wordProbabilities[error2] = entry2.getValue();
+                for (int error2 = error1 + 2; error2 < words.length; ++error2) {
+                    for (String alternativeWord2 : alternativeWords.get(error2).keySet()) {
                         // Try the sentence after correcting two errors.
-                        double newP = getSuggestionProbability(words, wordProbabilities);
-                        if (newP > bestProbability) {
-                            bestProbability = newP;
-                            bestSuggestion = words.clone();
-                        }
+                        answer.update(error2, alternativeWord2);
                     }
-                    words[error2] = originalWord2;
-                    wordProbabilities[error2] = originalProb2;
+                    answer.restore(error2);
                 }
             }
-            words[error1] = originalWord1;
-            wordProbabilities[error1] = originalProb1;
+            answer.restore(error1);
         }
 
-        return String.join(" ", bestSuggestion);
-    }
-
-    double getSuggestionProbability(String[] suggestion, Double[] wordProbabilities) {
-        double probability = 1;
-        // Use single word probability (unigram and edit probability)
-        for (int i = 0; i < wordProbabilities.length; ++i) {
-            probability *= wordProbabilities[i];
-        }
-        // Use bigram probability
-        for (int i = 0; i < suggestion.length - 1; ++i) {
-            probability *= cr.getSmoothedCount(suggestion[i] + " " + suggestion[i + 1]) / (cr.getSmoothedCount(suggestion[i]));
-        }
-        return probability;
+        return answer.getSuggestion();
     }
 
     /**
@@ -127,6 +96,7 @@ public class SpellCorrector {
             double wordProbability = prior * editProbability;
             // TODO: Sum probabilities if word can be formed in multiple ways,
             //       (e.g. acress->acres: ss|s and es|e)
+
             candidates.put(candidate, wordProbability);
         };
         
@@ -165,5 +135,119 @@ public class SpellCorrector {
 
     private interface TriConsumer<T, U, V> {
         void call(T t, U u, V v);
+    };
+
+    private class IntermediateAnswer {
+        // The words of the original sentence.
+        private final String[] original;
+        // A list of suggestions, stored in a map (key = candidate, value = word probability).
+        private final List<Map<String,Double>> alternativeWords;
+
+        // The current suggestion, per-word probability and summed probability.
+        private String[] suggestion;
+        private double[] probabilities;
+        private double probabilitySum;
+
+        // The best suggestion and its probability.
+        private String[] bestSuggestion = {};
+        private double bestProbabilitySum = 0;
+
+        IntermediateAnswer(String[] original, List<Map<String,Double>> alternativeWords) {
+            this.original = original.clone();
+            this.alternativeWords = alternativeWords;
+            this.suggestion = original.clone();
+
+            // Calculate the probabilities of the original word, without any correction.
+            probabilities = new double[original.length];
+            Arrays.fill(probabilities, 0);
+            probabilitySum = 0;
+            for (int i = 0; i < suggestion.length; ++i) {
+                double probability = getWordProbabilityAt(i);
+                probabilities[i] = probability;
+                probabilitySum += probability;
+            }
+
+            this.bestSuggestion = suggestion.clone();
+            this.bestProbabilitySum = probabilitySum;
+        }
+
+        /**
+         * Propose an alternative to the current phrase. If the suggestion has a higher
+         * probability of being correct, the instance's state is updated with the new suggestion.
+         *
+         * @param wordIndex - The position where the word will be changed.
+         * @param suggestion - The suggested word.
+         */
+        void update(int wordIndex, String suggestedWord) {
+            suggestion[wordIndex] = suggestedWord;
+
+            if (recalculateProbabilityAt(wordIndex)) {
+                bestSuggestion = suggestion.clone();
+                bestProbabilitySum = probabilitySum;
+            }
+        }
+
+        /**
+         * Restore the original word at the given index.
+         *
+         * @param wordIndex
+         */
+        void restore(int wordIndex) {
+            suggestion[wordIndex] = original[wordIndex];
+            recalculateProbabilityAt(wordIndex);
+        }
+
+        String getSuggestion() {
+            return String.join(" ", bestSuggestion);
+        }
+
+        /**
+         * @param wordIndex A number in the range [0, number of words in |original|]
+         * @return Whether the overall probability increased since the last check.
+         */
+        private boolean recalculateProbabilityAt(int wordIndex) {
+            double pOriginal = probabilities[wordIndex];
+            probabilities[wordIndex] = getWordProbabilityAt(wordIndex);
+            double diff = probabilities[wordIndex] - pOriginal;
+
+            // Changing a word may affect the probability of the next word, because the
+            // algorithm takes the previous word into account in the calculation of word
+            // probability. So, if this is not the last word, recalculate the probability
+            // of the next word as well.
+            if (wordIndex != probabilities.length - 1) {
+                double pNextOriginal = probabilities[wordIndex + 1];
+                probabilities[wordIndex + 1] = getWordProbabilityAt(wordIndex + 1);
+                diff += probabilities[wordIndex + 1] - pNextOriginal;
+            }
+            probabilitySum += diff;
+            //System.out.println(String.format("%s %s", suggestion[wordIndex], diff));
+            return diff > 0;
+        }
+
+        /**
+         * Calculate the probability that a word at the given location is correct.
+         */
+        private double getWordProbabilityAt(int wordIndex) {
+            String word = suggestion[wordIndex];
+            double probability;
+            if (!cr.inVocabulary(word)) {
+                // Words that are not in the dictionary MUST be corrected.
+                return 0;
+            }
+            if (wordIndex == 0) {
+                // There is no word before the first word.
+                probability = 1;
+            } else {
+                probability = cr.getSmoothedCount(suggestion[wordIndex - 1] + " " + word) /
+                    cr.getSmoothedCount(suggestion[wordIndex - 1]);
+            }
+            // TODO: Replace "1" with a constant. If it is too low (0), then correct words
+            // may be replaced. If it is too high (1), then existing (but incorrect) words
+            // could still stick around.
+            // For now, be conversative by not lowering the probability if the word does
+            // exist in the dictionary.
+            probability *= alternativeWords.get(wordIndex).getOrDefault(word, 1.0);
+            return probability;
+        }
     };
 }
