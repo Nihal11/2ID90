@@ -164,11 +164,11 @@ public class SpellCorrector {
             // Calculate the probabilities of the original word, without any correction.
             probabilities = new double[original.length];
             Arrays.fill(probabilities, 0);
-            probabilityProduct = 0;
+            probabilityProduct = 1;
             for (int i = 0; i < suggestion.length; ++i) {
                 double probability = getWordProbabilityAt(i);
                 probabilities[i] = probability;
-                probabilityProduct += probability;
+                probabilityProduct *= probability;
             }
 
             this.bestSuggestion = suggestion.clone();
@@ -212,23 +212,20 @@ public class SpellCorrector {
         private boolean recalculateProbabilityAt(int wordIndex) {
             double pOriginal = probabilities[wordIndex];
             probabilities[wordIndex] = getWordProbabilityAt(wordIndex);
-            double oldProduct = pOriginal;
-            double newProduct = probabilities[wordIndex];
+            double originalProbabilityProduct = probabilityProduct;
 
             // Changing a word may affect the probability of the next word, because the
             // algorithm takes the previous word into account in the calculation of word
             // probability. So, if this is not the last word, recalculate the probability
             // of the next word as well.
             if (wordIndex != probabilities.length - 1) {
-                double pNextOriginal = probabilities[wordIndex + 1];
                 probabilities[wordIndex + 1] = getWordProbabilityAt(wordIndex + 1);
-                oldProduct *= pNextOriginal;
-                newProduct *= probabilities[wordIndex + 1];
             }
-            probabilityProduct *= newProduct;
-            probabilityProduct /= oldProduct;
-            //System.out.println(String.format("%s %s", suggestion[wordIndex], diff));
-            return newProduct > oldProduct;
+            probabilityProduct = 1;
+            for (double p : probabilities) {
+                probabilityProduct *= p;
+            }
+            return probabilityProduct > originalProbabilityProduct;
         }
 
         /**
