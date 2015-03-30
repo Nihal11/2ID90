@@ -129,10 +129,9 @@ public class SpellCorrector {
             }
         }
 
-        if (cr.inVocabulary(wordWithoutWhitespace)) {
-            // TODO: 0.95 is a magic number. Turn it into a constant.
-            candidates.put(wordWithoutWhitespace, 0.95);
-        }
+        // Remove the word itself, because it should not be interpreted as a suggestion.
+        // Otherwise the presence of this word prevents the next word from being corrected.
+        candidates.remove(wordWithoutWhitespace);
 
         return candidates;
     }
@@ -237,6 +236,10 @@ public class SpellCorrector {
             if (!cr.inVocabulary(word)) {
                 // Words that are not in the dictionary MUST be corrected.
                 return 0;
+            }
+            if (word.equals(original[wordIndex])) {
+                // TODO: This is a magic number. Put it in a (configurable) variable!
+                return 0.95;
             }
             if (wordIndex == 0) {
                 // There is no word before the first word.
