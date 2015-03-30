@@ -243,10 +243,6 @@ public class SpellCorrector {
                 // Words that are not in the dictionary MUST be corrected.
                 return 0;
             }
-            if (word.equals(original[wordIndex])) {
-                // TODO: This is a magic number. Put it in a (configurable) variable!
-                return 0.95;
-            }
             if (wordIndex == 0) {
                 // There is no word before the first word.
                 probability = 1;
@@ -254,12 +250,15 @@ public class SpellCorrector {
                 probability = cr.getSmoothedCount(suggestion[wordIndex - 1] + " " + word) /
                     cr.getSmoothedCount(suggestion[wordIndex - 1]);
             }
-            // TODO: Replace "1" with a constant. If it is too low (0), then correct words
-            // may be replaced. If it is too high (1), then existing (but incorrect) words
-            // could still stick around.
-            // For now, be conversative by not lowering the probability if the word does
-            // exist in the dictionary.
-            probability *= alternativeWords.get(wordIndex).getOrDefault(word, 1.0);
+
+            if (word.equals(original[wordIndex])) {
+                // TODO: This is a magic number. Put it in a (configurable) variable!
+                probability *= 0.95;
+            } else {
+                // Note: Using .get instead of .getOrDefault because the word should either
+                // be the original word, or a suggestion.
+                probability *= alternativeWords.get(wordIndex).get(word);
+            }
             return probability;
         }
     };
