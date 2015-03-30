@@ -92,7 +92,6 @@ public class SpellCorrector {
             // "A spelling correction program based on a noisy channel model".
             double prior = (cr.getNGramCount(candidate) + 0.5) / cr.getVocabularySize();
             double editProbability = cmr.getConfusionCount(original, replacement) / (double)charsCount;
-            if (original.equals(replacement)) editProbability = 0.95;
             double wordProbability = prior * editProbability;
             // TODO: Sum probabilities if word can be formed in multiple ways,
             //       (e.g. acress->acres: ss|s and es|e)
@@ -128,6 +127,11 @@ public class SpellCorrector {
             for (char newLetter : ALPHABET) {
                 collector.call(i, i + 1, Character.toString(newLetter));
             }
+        }
+
+        if (cr.inVocabulary(wordWithoutWhitespace)) {
+            // TODO: 0.95 is a magic number. Turn it into a constant.
+            candidates.put(wordWithoutWhitespace, 0.95);
         }
 
         return candidates;
