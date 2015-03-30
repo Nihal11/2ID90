@@ -216,9 +216,7 @@ public class SpellCorrector {
          * @return Whether the overall probability increased since the last check.
          */
         private boolean recalculateProbabilityAt(int wordIndex) {
-            double pOriginal = probabilities[wordIndex];
             probabilities[wordIndex] = getWordProbabilityAt(wordIndex);
-            double originalProbabilityProduct = probabilityProduct;
 
             // Changing a word may affect the probability of the next word, because the
             // algorithm takes the previous word into account in the calculation of word
@@ -227,11 +225,12 @@ public class SpellCorrector {
             if (wordIndex != probabilities.length - 1) {
                 probabilities[wordIndex + 1] = getWordProbabilityAt(wordIndex + 1);
             }
+
             probabilityProduct = 1;
             for (double p : probabilities) {
                 probabilityProduct *= p;
             }
-            return probabilityProduct > originalProbabilityProduct;
+            return probabilityProduct > bestProbabilityProduct;
         }
 
         /**
