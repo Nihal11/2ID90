@@ -88,9 +88,7 @@ public class SpellCorrector {
                 // The given character sequence is never misspelled in this way - ignore it.
                 return;
             }
-            // This is the scoring method as described by Kernighan et al. (1990) in
-            // "A spelling correction program based on a noisy channel model".
-            double prior = (cr.getNGramCount(candidate) + 0.5) / cr.getVocabularySize();
+            double prior = calculatePrior(candidate);
             double editProbability = cmr.getConfusionCount(original, replacement) / (double)charsCount;
             double wordProbability = prior * editProbability;
 
@@ -141,6 +139,12 @@ public class SpellCorrector {
         candidates.remove(wordWithoutWhitespace);
 
         return candidates;
+    }
+
+    private double calculatePrior(String word) {
+        // This is the scoring method as described by Kernighan et al. (1990) in
+        // "A spelling correction program based on a noisy channel model".
+        return (cr.getNGramCount(word) + 0.5) / cr.getVocabularySize();
     }
 
     private interface TriConsumer<T, U, V> {
@@ -253,7 +257,7 @@ public class SpellCorrector {
 
             if (word.equals(original[wordIndex])) {
                 // TODO: This is a magic number. Put it in a (configurable) variable!
-                probability *= 0.95;
+                probability *= 0.95 * calculatePrior(word);
             } else {
                 // Note: Using .get instead of .getOrDefault because the word should either
                 // be the original word, or a suggestion.
