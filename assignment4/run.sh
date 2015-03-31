@@ -19,6 +19,8 @@ fi
 
 # Separate compile and run to avoid useless output
 if OUTPUT=$(ant compile -s) ; then
+    export NO_PEACH=1
+
     # Success! Now run it.
     "$JAVA_HOME/bin/java" -cp build/classes/ SpellChecker
 else

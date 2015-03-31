@@ -9,7 +9,10 @@ public class SpellChecker {
      */
     public static void main(String[] args) 
     {
-        boolean inPeach = false; // set this to true if you submit to peach!!!
+        boolean inPeach = true; // set this to true if you submit to peach!!!
+        if (System.getenv("NO_PEACH") != null) {
+            inPeach = false;
+        }
         
         try {
             CorpusReader cr = new CorpusReader();
