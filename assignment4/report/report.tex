@@ -1,0 +1,102 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[latin1]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[margin=1in]{geometry}
+\usepackage[linesnumbered,noend]{algorithm2e}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\hypersetup{ % Copied from: http://tex.stackexchange.com/a/847/41003
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+
+% New paragraph = blank line, not indent.
+\setlength{\parskip}{0.3cm}
+\setlength{\parindent}{0pt}
+
+% Code listings
+\usepackage{listings}
+
+\title{Spelling Correction}
+\author{
+Dennis van der Schagt (0814249)\\
+Rob Wu (0787817)
+}
+\date{\today}
+
+
+\begin{document}
+\maketitle
+\newpage
+\section*{Abstract}
+
+
+\section{The algorithm}
+To find the best suggestion for a spelling correction, potential spelling corrections need to be generated and evaluated.
+
+We assume that the input text contains at most two misspelled words, which are not next to each other.
+To find the most appropriate spelling correction, we first rate the original text, and then re-evaluate the text with one or two words modified.
+We apply the noisy channel model and assume that a word contains only one typographical mistake (insertion, deletion or substitution of one character, or transposition of two consecutive characters). For each input word, a list of such corrections is generated. These corrections are called \textit{candidates}. The output where words may be replaced by candidates is called a \textit{suggestion}.
+
+To evaluate a suggestion, the likelihood of a candidate is used, as well as the likelihood of the bigrams of candidates within the suggestion.
+In the next sections, these are explained in detail. The suggestion where the combined likelihoods is maximized is used.
+
+%TODO Improve pseudo-code.
+\begin{lstlisting}
+// Split the input sentence into words.
+
+// Pre-calculate channel model probabilities.
+
+// Calculate the initial probability of the input word.
+
+// Generate plausible suggestions for spelling correction,
+// and evaluate their accuracy.
+
+// Present the final suggestion.
+\end{lstlisting}
+
+\subsection{Channel model probability}
+\subsection{Bigram language model probability}
+\subsection{Generating suggestions}
+
+\section{Results}
+
+\section{Reproducing the results}
+Following are the steps required to reproduce our results:
+\begin{itemize}
+\item Download the Netbeans project of our Spelling correction program from Peach.
+\item Compile the project, e.g. using \textsc{ant compile}.
+\item Run the project, e.g. using \textsc{ant run}.
+\item Type a sentence consisting of lowercase Latin letters and spaces, with at most two spelling errors and press enter.
+\item Read the result. The corrected sentence will be displayed as "Answer: [corrected sentence].
+\end{itemize}
+
+\section{References}
+
+
+\section{Contributions}
+Dennis and Rob contributed equally to this assignment.
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
