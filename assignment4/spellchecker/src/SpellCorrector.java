@@ -14,8 +14,10 @@ public class SpellCorrector {
     final double EDIT_PROBABILITY_K_SMOOTHING = 1;
 
     // Constant added to a word's count to smooth according to method as
-    //   described by Kernighan et al. (1990).
-    final double ADD_K_PRIOR = 0.5;
+    //   described by Kernighan et al. (1990). This improves probability for
+    //   unknown words. This does not add anything useful now as we don't
+    //   allow words that are not in the vocabulary anyway.
+    final double ADD_K_PRIOR = 0.0;
     
     // We assume that one out of 200 words contains an error
     final double PROBABILITY_NO_EDIT_NEEDED = 0.95;
