@@ -23,6 +23,24 @@
 
 % Code listings
 \usepackage{listings}
+\usepackage{color,courier}
+
+\definecolor{dkgreen}{rgb}{0,0.55,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{language=Python,
+linewidth=80em,
+breaklines=true,
+numbers=left,
+basicstyle=\ttfamily\footnotesize,
+showstringspaces=false,
+numberstyle=\tiny\color{gray},
+keywordstyle=\color{blue},
+commentstyle=\color{dkgreen},
+stringstyle=\color{mauve},
+}
+
 
 \title{Spelling Correction}
 \author{
@@ -46,20 +64,60 @@ To find the most appropriate spelling correction, we first rate the original tex
 We apply the noisy channel model and assume that a word contains only one typographical mistake (insertion, deletion or substitution of one character, or transposition of two consecutive characters). For each input word, a list of such corrections is generated. These corrections are called \textit{candidates}. The output where words may be replaced by candidates is called a \textit{suggestion}.
 
 To evaluate a suggestion, the likelihood of a candidate is used, as well as the likelihood of the bigrams of candidates within the suggestion.
-In the next sections, these are explained in detail. The suggestion where the combined likelihoods is maximized is used.
+These likelihoods are combined (the exact method is explained later) and form the \textit{combined likelihood}.
+After calculating the likelihoods for every suggestion, the one with the maximal \textit{combined likelihood} is presented as the final suggestion for spelling correction.
 
-%TODO Improve pseudo-code.
-\begin{lstlisting}
-// Split the input sentence into words.
+\subsection{General flow}
+A naive way to implement the previous concepts is to generate a list containing every possible suggestion, and then iterate over the list to find the maximal value.
+Although this method is simple, it is not the best choice because it does not scale well: the number of suggestions is of the order $O(\textit{[number of candidates per word]}^2 \times \textit{[number of words in the input text]})$.
+This excessive memory demand can be solved by immediately evaluating the suggestion when it is generated, and replacing the then-best suggestion with the just-evaluated suggestion when its combined likelihood is higher.
 
-// Pre-calculate channel model probabilities.
+Suggestions are generated as follows. First, we split the input text into a list of words. Then, for each word, we generate and store a list of candidates (as elaborated in section \ref{generateCandidateWords}). This step requires $O(\textit{[number of candidates per word]} \times \textit{[number of words in the input text]})$ memory. If peak memory usage is a concern, this step can be omitted at the cost of speed (time) in the next step.
 
-// Calculate the initial probability of the input word.
+The actual suggestion generation is done by using the assumption that at most two non-consecutive errors occur in the input text. For every word, we iterate over the list of candidates and evaluate the suggestion that is equal to the original text, but with the given word replaced by a candidate. Similar logic is used to find and evaluate the second spelling error. The original word is also rated, since it is also possible that the input is correct, i.e. contains zero spelling errors.
 
-// Generate plausible suggestions for spelling correction,
-// and evaluate their accuracy.
+The pseudo-code of the general structure is displayed below.
 
-// Present the final suggestion.
+\begin{lstlisting}[language=python]
+words = input.split(' ')
+candidates = []
+for word in words:
+   # getCandidateWords generates a set of candidates for each word; its
+   # exact implementation is explained later.
+   candidates.append(getCandidateWords(word))
+
+# The program will not output a suggestion if a word is not in the dictionary.
+bestSuggestion = input if input in dictionary  else  ""
+
+for error1 in range( 0, len(words) ):
+    for candidate1 in candidates:
+        # Evaluate the suggestion, with the word at position |error1| replaced
+        # by |candidate1|.
+        evaluate(error1, candidate1)
+      
+        # Try to find the next error. The next word after a corrected word is
+        # assumed to be correct, so skip the word at the next position and
+        # start iterating over the words from the next position, i.e. at
+        # position |error1| + 2.
+        for error2 in range( error1 + 2, len(words) ):
+
+            for candidate2 in candidates:
+                # Evaluate the suggestion, with the word at position |error2|
+                # replaced with |candidate2|. Note that the word at position
+                # |error1| is still |candidate1|.
+                evaluate(error2, candidate2)
+        
+         # restore the original word at position |error2|, so that the next
+         # iteration over |error1| will use the original word.
+         restore(error2)
+
+     # restore the original word at position |error1|
+     restore(error1)
+
+# At this point, every possible combination of candidates in the suggestion has
+# been checked by the evaluate function, and the best suggestion has been
+# selected. Show this suggestion.
+print(bestSuggestion)
 \end{lstlisting}
 
 \subsection{Channel model probability}
