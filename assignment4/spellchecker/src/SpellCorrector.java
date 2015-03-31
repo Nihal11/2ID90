@@ -83,13 +83,9 @@ public class SpellCorrector {
                 return;
             }
             String original = word.substring(start, end);
-            int charsCount = cmr.getCharsCount(original);
-            if (charsCount == 0) {
-                // The given character sequence is never misspelled in this way - ignore it.
-                return;
-            }
+
             double prior = calculatePrior(candidate);
-            double editProbability = cmr.getConfusionCount(original, replacement) / (double)charsCount;
+            double editProbability = (double)(cmr.getConfusionCount(original, replacement) + 1) / (cmr.getCharsCount(original) + 1);
             double wordProbability = prior * editProbability;
 
             // Sum probabilities if word can be formed in multiple ways,
