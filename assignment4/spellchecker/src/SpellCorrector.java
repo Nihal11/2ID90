@@ -9,6 +9,12 @@ public class SpellCorrector {
     final private ConfusionMatrixReader cmr;
     
     final char[] ALPHABET = "abcdefghijklmnopqrstuvwxyz'".toCharArray();
+
+    // Add constant to the results from the confusion matrix to smooth the edit probability
+    final double EDIT_PROBABILITY_K_SMOOTHING = 1;
+    // Constant added to a word's count to smooth according to method as
+    //   described by Kernighan et al. (1990)
+    final double ADD_K_PRIOR = 0.5;
     
     
     public SpellCorrector(CorpusReader cr, ConfusionMatrixReader cmr) 
@@ -85,7 +91,7 @@ public class SpellCorrector {
             String original = word.substring(start, end);
 
             double prior = calculatePrior(candidate);
-            double editProbability = (double)(cmr.getConfusionCount(original, replacement) + 1) / (cmr.getCharsCount(original) + 1);
+            double editProbability = (double)(cmr.getConfusionCount(original, replacement) + EDIT_PROBABILITY_K_SMOOTHING) / (cmr.getCharsCount(original) + EDIT_PROBABILITY_K_SMOOTHING);
             double wordProbability = prior * editProbability;
 
             // Sum probabilities if word can be formed in multiple ways,
@@ -140,7 +146,7 @@ public class SpellCorrector {
     private double calculatePrior(String word) {
         // This is the scoring method as described by Kernighan et al. (1990) in
         // "A spelling correction program based on a noisy channel model".
-        return (cr.getNGramCount(word) + 0.5) / cr.getVocabularySize();
+        return (cr.getNGramCount(word) + ADD_K_PRIOR) / cr.getVocabularySize();
     }
 
     private interface TriConsumer<T, U, V> {

@@ -11,6 +11,10 @@ public class CorpusReader
 {
     final static String CNTFILE_LOC = "samplecnt.txt";
     final static String VOCFILE_LOC = "samplevoc.txt";
+
+    // Value to be added to bigrams in getSmoothedCount to give a chance
+    //     (small probability) to unknown bigrams
+    final static double BIGRAM_BOOST = 0.01;
     
     private HashMap<String,Integer> ngrams;
     private Set<String> vocabulary;
@@ -118,12 +122,12 @@ public class CorpusReader
         double smoothedCount;
         String[] ngramWords = NGram.split(" ");
         if (ngramWords.length == 1) {
-            // Add 1 to smooth the count
+            // Smooth by adding one to every unigram count
             smoothedCount = getNGramCount(NGram) + 1;
         } else {
-            smoothedCount = getNGramCount(NGram) + 0.01;
+            // Bigrams have a lower frequency. Just adding one would boost non-existing pairs too much
+            smoothedCount = getNGramCount(NGram) + BIGRAM_BOOST;
         }
-        // TODO: Check if this should return a probability or just the count
         return smoothedCount;        
     }
 }
