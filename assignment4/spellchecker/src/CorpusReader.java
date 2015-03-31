@@ -14,7 +14,7 @@ public class CorpusReader
 
     // Value to be added to bigrams in getSmoothedCount to give a chance
     //     (small probability) to unknown bigrams
-    final static double BIGRAM_BOOST = 0.01;
+    final static double BIGRAM_SMOOTHING = 0.01;
     
     private HashMap<String,Integer> ngrams;
     private Set<String> vocabulary;
@@ -124,7 +124,7 @@ public class CorpusReader
             return getNGramCount(NGram) + 1;
         } else {
             // Bigrams have a lower frequency. Just adding one would boost non-existing pairs too much.
-            return getNGramCount(NGram) + BIGRAM_BOOST;
+            return getNGramCount(NGram) + BIGRAM_SMOOTHING;
         }
     }
 }
