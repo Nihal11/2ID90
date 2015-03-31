@@ -119,15 +119,12 @@ public class CorpusReader
             throw new IllegalArgumentException("NGram must be non-empty.");
         }
 
-        double smoothedCount;
-        String[] ngramWords = NGram.split(" ");
-        if (ngramWords.length == 1) {
-            // Smooth by adding one to every unigram count
-            smoothedCount = getNGramCount(NGram) + 1;
+        if (NGram.indexOf(' ') == -1) {
+            // Smooth by adding one to every unigram count.
+            return getNGramCount(NGram) + 1;
         } else {
-            // Bigrams have a lower frequency. Just adding one would boost non-existing pairs too much
-            smoothedCount = getNGramCount(NGram) + BIGRAM_BOOST;
+            // Bigrams have a lower frequency. Just adding one would boost non-existing pairs too much.
+            return getNGramCount(NGram) + BIGRAM_BOOST;
         }
-        return smoothedCount;        
     }
 }

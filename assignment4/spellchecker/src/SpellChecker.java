@@ -106,11 +106,12 @@ public class SpellChecker {
                 "ancient china was one of the longest lasting societies in the history of the world",
             };
             
+            // Test every sentence in `sentence`[].
             for(int i = 0; i < sentences.length; ++i) {
                 String original = sentences[i];
                 String correct = correctSentences[i];
                 String result = sc.correctPhrase(original);
-
+                // Only print information for failing tests.
                 if (! result.equals(correct)) {
                     System.out.println("Input  : " + original);
                     System.out.println("Answer : " + result);

@@ -10,12 +10,15 @@ public class SpellCorrector {
     
     final char[] ALPHABET = "abcdefghijklmnopqrstuvwxyz'".toCharArray();
 
-    // Add constant to the results from the confusion matrix to smooth the edit probability
+    // Add constant to the results from the confusion matrix to smooth the edit probability.
     final double EDIT_PROBABILITY_K_SMOOTHING = 1;
+
     // Constant added to a word's count to smooth according to method as
-    //   described by Kernighan et al. (1990)
+    //   described by Kernighan et al. (1990).
     final double ADD_K_PRIOR = 0.5;
     
+    // We assume that one out of 200 words contains an error
+    final double PROBABILITY_NO_EDIT_NEEDED = 0.95;
     
     public SpellCorrector(CorpusReader cr, ConfusionMatrixReader cmr) 
     {
@@ -38,7 +41,11 @@ public class SpellCorrector {
             alternativeWords.add(getCandidateWords(word));
         }
 
+        // Build a suggestion sentence and calculate probability for original sentence.
         IntermediateAnswer answer = new IntermediateAnswer(words, alternativeWords);
+        // The IntermediateAnswer keeps track of the best answer. Every time its update()
+        //     method is called one of the words is changed into a candidate correction
+        //     and the newly formed sentence's probability is calculate.
 
         // Suggest sentences with one or two errors corrected.
         for (int error1 = 0; error1 < words.length; ++error1) {
@@ -70,12 +77,13 @@ public class SpellCorrector {
      */
     private Map<String,Double> getCandidateWords(String wordWithoutWhitespace)
     {
-        // The whitespace is necessary for add/substitution
+        // The whitespace is necessary for add/deletion.
         final String word = " " + wordWithoutWhitespace + " ";
 
         Map<String,Double> candidates = new HashMap<>();
 
         /**
+         * Puts candidate corrections together with their probability into a map.
          * @param start - Start position of word to be replaced.
          * @param end - Position after word to be replaced.
          * @param replacement
@@ -91,6 +99,7 @@ public class SpellCorrector {
             String original = word.substring(start, end);
 
             double prior = calculatePrior(candidate);
+            // Get count from confusion matrix and smooth the probability to allow for unseen corrections.
             double editProbability = (double)(cmr.getConfusionCount(original, replacement) + EDIT_PROBABILITY_K_SMOOTHING) / (cmr.getCharsCount(original) + EDIT_PROBABILITY_K_SMOOTHING);
             double wordProbability = prior * editProbability;
 
@@ -108,7 +117,7 @@ public class SpellCorrector {
         
         // We only have to find words with Damerau-Levenshtein distance of at
         // most 1 which means that each input word needs only be altered by at
-        // most 1 insertion, deletion, transposition or substitution
+        // most 1 insertion, deletion, transposition or substitution.
 
         // Insertion
         for (int i = 1; i < word.length(); ++i) {
@@ -156,7 +165,7 @@ public class SpellCorrector {
     private class IntermediateAnswer {
         // The words of the original sentence.
         private final String[] original;
-        // A list of suggestions, stored in a map (key = candidate, value = word probability).
+        // A list of candidate corrections, stored in a map (key = candidate, value = word probability).
         private final List<Map<String,Double>> alternativeWords;
 
         // The current suggestion, per-word probability and summed probability.
@@ -176,7 +185,6 @@ public class SpellCorrector {
 
             // Calculate the probabilities of the original word, without any correction.
             likelihoods = new double[original.length];
-            Arrays.fill(likelihoods, 0);
             likelihoodSum = 0;
             for (int i = 0; i < suggestion.length; ++i) {
                 double likelihood = getWordLikelihoodAt(i);
@@ -198,7 +206,7 @@ public class SpellCorrector {
         void update(int wordIndex, String suggestedWord) {
             suggestion[wordIndex] = suggestedWord;
 
-            if (recalculateProbabilityAt(wordIndex)) {
+            if (recalculateLikelihoodAt(wordIndex)) {
                 bestSuggestion = suggestion.clone();
                 bestLikelihoodSum = likelihoodSum;
             }
@@ -211,7 +219,7 @@ public class SpellCorrector {
          */
         void restore(int wordIndex) {
             suggestion[wordIndex] = original[wordIndex];
-            recalculateProbabilityAt(wordIndex);
+            recalculateLikelihoodAt(wordIndex);
         }
 
         String getSuggestion() {
@@ -225,7 +233,7 @@ public class SpellCorrector {
          * @param wordIndex A number in the range [0, number of words in |original|]
          * @return Whether the overall probability increased since the last check.
          */
-        private boolean recalculateProbabilityAt(int wordIndex) {
+        private boolean recalculateLikelihoodAt(int wordIndex) {
             likelihoods[wordIndex] = getWordLikelihoodAt(wordIndex);
 
             // Changing a word may affect the probability of the next word, because the
@@ -275,8 +283,7 @@ public class SpellCorrector {
             }
 
             if (word.equals(original[wordIndex])) {
-                // TODO: This is a magic number. Put it in a (configurable) variable!
-                probability *= 0.95 * calculatePrior(word);
+                probability *= PROBABILITY_NO_EDIT_NEEDED * calculatePrior(word);
             } else {
                 // Note: Using .get instead of .getOrDefault because the word should either
                 // be the original word, or a suggestion.
