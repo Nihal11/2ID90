@@ -114,9 +114,15 @@ public class CorpusReader
         {
             throw new IllegalArgumentException("NGram must be non-empty.");
         }
-        
-        // Add 1 to smooth the count
-        double smoothedCount = getNGramCount(NGram) + 1;
+
+        double smoothedCount;
+        String[] ngramWords = NGram.split(" ");
+        if (ngramWords.length == 1) {
+            // Add 1 to smooth the count
+            smoothedCount = getNGramCount(NGram) + 1;
+        } else {
+            smoothedCount = getNGramCount(NGram) + 0.01;
+        }
         // TODO: Check if this should return a probability or just the count
         return smoothedCount;        
     }
