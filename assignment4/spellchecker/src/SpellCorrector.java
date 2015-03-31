@@ -159,12 +159,13 @@ public class SpellCorrector {
 
         // The current suggestion, per-word probability and summed probability.
         private String[] suggestion;
-        private double[] probabilities;
-        private double probabilityProduct;
+        private double[] likelihoods;
+        // A number in the range [-Infinity, 0]. -Infinity = improbable, 0 = very likely.
+        private double likelihoodSum;
 
         // The best suggestion and its probability.
         private String[] bestSuggestion = {};
-        private double bestProbabilityProduct = 0;
+        private double bestLikelihoodSum = 0;
 
         IntermediateAnswer(String[] original, List<Map<String,Double>> alternativeWords) {
             this.original = original.clone();
@@ -172,17 +173,17 @@ public class SpellCorrector {
             this.suggestion = original.clone();
 
             // Calculate the probabilities of the original word, without any correction.
-            probabilities = new double[original.length];
-            Arrays.fill(probabilities, 0);
-            probabilityProduct = 1;
+            likelihoods = new double[original.length];
+            Arrays.fill(likelihoods, 0);
+            likelihoodSum = 0;
             for (int i = 0; i < suggestion.length; ++i) {
-                double probability = getWordProbabilityAt(i);
-                probabilities[i] = probability;
-                probabilityProduct *= probability;
+                double likelihood = getWordLikelihoodAt(i);
+                likelihoods[i] = likelihood;
+                likelihoodSum += likelihood;
             }
 
             this.bestSuggestion = suggestion.clone();
-            this.bestProbabilityProduct = probabilityProduct;
+            this.bestLikelihoodSum = likelihoodSum;
         }
 
         /**
@@ -197,7 +198,7 @@ public class SpellCorrector {
 
             if (recalculateProbabilityAt(wordIndex)) {
                 bestSuggestion = suggestion.clone();
-                bestProbabilityProduct = probabilityProduct;
+                bestLikelihoodSum = likelihoodSum;
             }
         }
 
@@ -212,7 +213,7 @@ public class SpellCorrector {
         }
 
         String getSuggestion() {
-            if (bestProbabilityProduct == 0) {
+            if (!Double.isFinite(bestLikelihoodSum)) {
                 return "";
             }
             return String.join(" ", bestSuggestion);
@@ -223,25 +224,38 @@ public class SpellCorrector {
          * @return Whether the overall probability increased since the last check.
          */
         private boolean recalculateProbabilityAt(int wordIndex) {
-            probabilities[wordIndex] = getWordProbabilityAt(wordIndex);
+            likelihoods[wordIndex] = getWordLikelihoodAt(wordIndex);
 
             // Changing a word may affect the probability of the next word, because the
             // algorithm takes the previous word into account in the calculation of word
             // probability. So, if this is not the last word, recalculate the probability
             // of the next word as well.
-            if (wordIndex != probabilities.length - 1) {
-                probabilities[wordIndex + 1] = getWordProbabilityAt(wordIndex + 1);
+            if (wordIndex != likelihoods.length - 1) {
+                likelihoods[wordIndex + 1] = getWordLikelihoodAt(wordIndex + 1);
             }
 
-            probabilityProduct = 1;
-            for (double p : probabilities) {
-                probabilityProduct *= p;
+            likelihoodSum = 0;
+            for (double s : likelihoods) {
+                likelihoodSum += s;
             }
-            return probabilityProduct > bestProbabilityProduct;
+            return likelihoodSum > bestLikelihoodSum;
+        }
+
+        /**
+         * Calculate the likelihood that the word at a given location is correct.
+         * @return a number in the range [-Infinity, 0]
+         *         -Infinity = improbable
+         *         0 = very likely
+         */
+        private double getWordLikelihoodAt(int wordIndex) {
+            double probability = getWordProbabilityAt(wordIndex);
+            double likelihood = Math.log(probability);
+            return likelihood;
         }
 
         /**
          * Calculate the probability that a word at the given location is correct.
+         * @return a number in the range [0,1]
          */
         private double getWordProbabilityAt(int wordIndex) {
             String word = suggestion[wordIndex];
