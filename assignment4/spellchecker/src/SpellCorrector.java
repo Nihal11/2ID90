@@ -212,6 +212,9 @@ public class SpellCorrector {
         }
 
         String getSuggestion() {
+            if (bestProbabilityProduct == 0) {
+                return "";
+            }
             return String.join(" ", bestSuggestion);
         }
 
