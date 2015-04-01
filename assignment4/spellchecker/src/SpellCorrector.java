@@ -38,30 +38,31 @@ public class SpellCorrector {
         String[] words = phrase.split(" ");
 
         // For each word, generate a list of candidates.
-        List<Map<String,Double>> alternativeWords = new ArrayList<>();
+        List<Map<String,Double>> candidates = new ArrayList<>();
         for (String word : words) {
-            alternativeWords.add(getCandidateWords(word));
+            candidates.add(getCandidateWords(word));
         }
 
         // Build a suggestion sentence and calculate probability for original sentence.
-        IntermediateAnswer answer = new IntermediateAnswer(words, alternativeWords);
-        // The IntermediateAnswer keeps track of the best answer. Every time its update()
-        //     method is called one of the words is changed into a candidate correction
-        //     and the newly formed sentence's probability is calculate.
+        IntermediateAnswer answer = new IntermediateAnswer(words, candidates);
+        // The IntermediateAnswer keeps track of the best answer. Every time its evaluate()
+        // method is called, the word at the given position is replaced with the suggested
+        // candidate. If the new suggestion is more likely to be correct than the previous
+        // one, the internal state is updated.
 
         // Suggest sentences with one or two errors corrected.
         for (int error1 = 0; error1 < words.length; ++error1) {
             // Save word, in order to restore the original words at the end of the loop.
-            for (String alternativeWord1 : alternativeWords.get(error1).keySet()) {
+            for (String candidate1 : candidates.get(error1).keySet()) {
                 // Try the sentence after correcting one error.
-                answer.update(error1, alternativeWord1);
+                answer.evaluate(error1, candidate1);
 
                 // Try two errors if possible.
                 // Use +2 because there must be at least one good word in between the errors.
                 for (int error2 = error1 + 2; error2 < words.length; ++error2) {
-                    for (String alternativeWord2 : alternativeWords.get(error2).keySet()) {
+                    for (String candidate2 : candidates.get(error2).keySet()) {
                         // Try the sentence after correcting two errors.
-                        answer.update(error2, alternativeWord2);
+                        answer.evaluate(error2, candidate2);
                     }
                     answer.restore(error2);
                 }
@@ -160,6 +161,7 @@ public class SpellCorrector {
         return (cr.getNGramCount(word) + ADD_K_PRIOR) / cr.getVocabularySize();
     }
 
+    // Interface to enable the declaration of a lambda function with three parameters.
     private interface TriConsumer<T, U, V> {
         void call(T t, U u, V v);
     };
@@ -168,24 +170,24 @@ public class SpellCorrector {
         // The words of the original sentence.
         private final String[] original;
         // A list of candidate corrections, stored in a map (key = candidate, value = word probability).
-        private final List<Map<String,Double>> alternativeWords;
+        private final List<Map<String,Double>> candidates;
 
-        // The current suggestion, per-word probability and summed probability.
+        // The current suggestion, per-word likelihood and summed likelihood.
         private String[] suggestion;
         private double[] likelihoods;
         // A number in the range [-Infinity, 0]. -Infinity = improbable, 0 = very likely.
         private double likelihoodSum;
 
-        // The best suggestion and its probability.
+        // The best suggestion and its summed likelihood.
         private String[] bestSuggestion = {};
         private double bestLikelihoodSum = 0;
 
-        IntermediateAnswer(String[] original, List<Map<String,Double>> alternativeWords) {
+        IntermediateAnswer(String[] original, List<Map<String,Double>> candidates) {
             this.original = original.clone();
-            this.alternativeWords = alternativeWords;
+            this.candidates = candidates;
             this.suggestion = original.clone();
 
-            // Calculate the probabilities of the original word, without any correction.
+            // Calculate the likelihoods of the original word, without any correction.
             likelihoods = new double[original.length];
             likelihoodSum = 0;
             for (int i = 0; i < suggestion.length; ++i) {
@@ -200,12 +202,12 @@ public class SpellCorrector {
 
         /**
          * Propose an alternative to the current phrase. If the suggestion has a higher
-         * probability of being correct, the instance's state is updated with the new suggestion.
+         * probability of being correct, the instance's state is evaluated with the new suggestion.
          *
          * @param wordIndex - The position where the word will be changed.
          * @param suggestion - The suggested word.
          */
-        void update(int wordIndex, String suggestedWord) {
+        void evaluate(int wordIndex, String suggestedWord) {
             suggestion[wordIndex] = suggestedWord;
 
             if (recalculateLikelihoodAt(wordIndex)) {
@@ -299,7 +301,7 @@ public class SpellCorrector {
             } else {
                 // Note: Using .get instead of .getOrDefault because the word should either
                 // be the original word, or a suggestion.
-                probability *= alternativeWords.get(wordIndex).get(word);
+                probability *= candidates.get(wordIndex).get(word);
             }
             return probability;
         }
