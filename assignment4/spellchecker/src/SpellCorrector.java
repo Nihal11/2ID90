@@ -236,19 +236,29 @@ public class SpellCorrector {
          * @return Whether the overall probability increased since the last check.
          */
         private boolean recalculateLikelihoodAt(int wordIndex) {
+            double diff = -likelihoods[wordIndex];
             likelihoods[wordIndex] = getWordLikelihoodAt(wordIndex);
+            diff += likelihoods[wordIndex];
 
             // Changing a word may affect the probability of the next word, because the
             // algorithm takes the previous word into account in the calculation of word
             // probability. So, if this is not the last word, recalculate the probability
             // of the next word as well.
             if (wordIndex != likelihoods.length - 1) {
+                diff -= likelihoods[wordIndex + 1];
                 likelihoods[wordIndex + 1] = getWordLikelihoodAt(wordIndex + 1);
+                diff += likelihoods[wordIndex + 1];
             }
 
-            likelihoodSum = 0;
-            for (double s : likelihoods) {
-                likelihoodSum += s;
+            if (Double.isFinite(likelihoodSum)) {
+                // Previous sum is finite. Re-use result.
+                likelihoodSum += diff;
+            } else {
+                // Previous calculation is unusable. Recalculate full sum.
+                likelihoodSum = 0;
+                for (double s : likelihoods) {
+                    likelihoodSum += s;
+                }
             }
             return likelihoodSum > bestLikelihoodSum;
         }
