@@ -18,6 +18,7 @@ public class CorpusReader
     
     private HashMap<String,Integer> ngrams;
     private Set<String> vocabulary;
+    private int totalWordCount;
         
     public CorpusReader() throws IOException
     {  
@@ -42,11 +43,19 @@ public class CorpusReader
         Integer value = ngrams.get(nGram);
         return value==null?0:value;
     }
+
+    /**
+     * @return The sum of all unigram counts.
+     */
+    public int getTotalWordCount() {
+        return totalWordCount;
+    }
     
     private void readNGrams() throws 
             FileNotFoundException, IOException, NumberFormatException
     {
         ngrams = new HashMap<>();
+        totalWordCount = 0;
 
         FileInputStream fis;
         fis = new FileInputStream(CNTFILE_LOC);
@@ -66,6 +75,10 @@ public class CorpusReader
                 ngrams.put(s2, count);
             } catch (NumberFormatException nfe) {
                 throw new NumberFormatException("NumberformatError: " + s1);
+            }
+            if (s2.indexOf(' ') == -1) {
+                // No space? It is a single word.
+                totalWordCount += count;
             }
         }
     }

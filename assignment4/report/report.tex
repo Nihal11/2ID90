@@ -195,6 +195,7 @@ We were given a set of Java files to develop a spell checker. These have changed
 \begin{itemize}
 \item The input reader of the confusion matrix was replaced, and uses regular expressions to parse the input. This ensures that the input format complies with the documented expected format.
 \item The \texttt{getCharsCount} method was added to \texttt{ConfusionMatrixReader.java}. This method returns the number of occurrences of errors in the data that was used to create the confusion matrix.
+\item The \texttt{CorpusReader} class was modified so that the corpus size of the training data can be requested. This is simply the sum of all unigram counts, and used to calculate word frequency.
 \item The \texttt{calculateChannel} method of \texttt{SpellCorrector.java}  has been removed. The probability is calculated in a private inner class within the same file, \texttt{IntermediateAnswer}. This class maintains the state of the spelling corrector, and decouples the state of the \texttt{correctPhrase} from the \texttt{SpellCorrector} class. This makes it easier to extend the class if wanted, e.g. to add support for multi-threading.
 \item The \texttt{getCandidateWords} method's signature of \texttt{SpellCorrector.java} was changed to match the fact that it returns a Map instead of a Set. It was also declared private, since it is merely an implementation detail of the class, and not intended to be used outside the class.
 \item \texttt{confusion\_matrix.txt} was replaced with the confusion matrix from Kernighan \cite{kernighan}.

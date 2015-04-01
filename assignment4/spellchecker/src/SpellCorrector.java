@@ -158,7 +158,7 @@ public class SpellCorrector {
     private double calculatePrior(String word) {
         // This is the scoring method as described by Kernighan et al. (1990) in
         // "A spelling correction program based on a noisy channel model".
-        return (cr.getNGramCount(word) + ADD_K_PRIOR) / cr.getVocabularySize();
+        return (cr.getNGramCount(word) + ADD_K_PRIOR) / cr.getTotalWordCount();
     }
 
     // Interface to enable the declaration of a lambda function with three parameters.
