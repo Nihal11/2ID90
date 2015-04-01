@@ -170,8 +170,24 @@ The prior is simply the frequency of the word, and the edit probability is the s
 Some candidates can be generated in multiple ways, e.g. "ass" can become "as" by removing any of the two "s" characters.
 This possibility is accounted for by summing the calculated probabilities (up to a maximum of 1).
 
-\subsection{Bigram language model probability}
-\subsection{Generating suggestions}
+\subsection{Evaluating word suggestions}
+The previous sections explained how suggestions and candidates are generated, together with the channel model probability of each candidate.
+This section brings the pieces together.
+
+We define the probability that a word at a certain position within the input is correct as the product of the \textit{channel probability} and the bigram frequency (with the previous word).
+The latter is the quotient with the smoothened bigram count of the previous word together with the given word as numerator and the smoothened unigram count of the previous word as denominator.
+The first word does not have a previous word, so we will only use the channel probability in that case.
+
+After determining the probability that a word within the suggestion is correct, we can take the product of these probabilities to get the probability that the suggestion is correct. Then the best choice is the probability that is closest to 1.
+An issue with this approach is that most application runtimes cannot store arbitrary-precision floating point numbers. If the input has many words and/or contains many low-frequency words and/or low-frequency edits, then the product of these small probabilities cannot be represented as a (small) floating-point number any more, and all calculated probabilities would effectively be zero.
+
+\subsubsection{Enhancing probability: likelihood}
+To solve the problem of representability of floating-point numbers, we apply a clever trick. The probability is a number in the range $[0,1]$, but the application does not need the number to be constrained to this format. The only requirement is that the value needs to be monotonous and be bounded at at least one boundary.
+
+So, we normalize all numbers by taking a logarithm of the probabilities and summing the result. A logarithm on domain $[0,1]$ maps to the range $[-\infty, 0]$, where $-\infty$ means "improbable" and $0$ "very likely". The number is by definition no longer a probability, so we call it "likelihood" to avoid any confusion.\\
+Although this solution is not perfect (adding huge negative numbers will eventually result in negative infinity), it is an improvement over the previous situation, because the method does not suffer from the problem of loosing precision.
+
+With this normalization, another optimization can be done. Instead of summing all numbers, we can re-use likelihood sums, by subtracting the original likelihood and adding the likelihood of the changed word. Then the likelihood calculation is no longer linear in terms of the word count, but constant!
 
 \section{Results}
 The spell checker can be configured by 3 parameters. The quality of the spell checker strongly depends on those parameters. Optimal values for those parameters were determined by running the spell checker on our own training data. The 3 parameters are called: probability-no-edit-needed, edit-probability-k-smoothing, and bigram-smoothing. Following is a description of those parameters and their influence on the output.
