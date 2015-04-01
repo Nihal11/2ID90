@@ -161,11 +161,14 @@ for i in range(1, len(word) - 1):
         collect(i, i + 1, newLetter)
 \end{lstlisting}
 
-%TODO explain use of confusion matrix + summation of probabilities
+In the pseudo-code, the \texttt{collect} function is invoked several times.
+This method generates a potential candidate (by replacing the characters in the given range by the given replacement) and checks whether the word is in the dictionary.
+If the word exists, the probability that the edit is correct is calculated and stored together with the candidate (this probability is used many times during the evaluation of suggestions, so it makes sense to calculate and store it in advance).
+This probability is also known as "channel model probability" within the noisy channel framework, and is a product of two factors: the \textit{prior} and the \textit{edit probability}.
+The prior is simply the frequency of the word, and the edit probability is the smoothened edit frequency. This is derived from the confusion matrix from Kernighan's paper \cite{ref:confusion}.
 
-%TODO Throw "channel model probability" term in the text.
-
-%TODO Mention that the probability is tied to the word and position, and stored together with the candidate for performance reasons.
+Some candidates can be generated in multiple ways, e.g. "ass" can become "as" by removing any of the two "s" characters.
+This possibility is accounted for by summing the calculated probabilities (up to a maximum of 1).
 
 \subsection{Bigram language model probability}
 \subsection{Generating suggestions}
